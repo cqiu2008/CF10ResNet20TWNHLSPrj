@@ -14,10 +14,12 @@
 int main(){
     int ret = 0;
     LOG(CONSOLE)<<"Starting to test the cnn inference accelerator1"<<endl;
+
 //    timeval start,end;
     network *net = new cresnet20();
-//    net->CreateNetwork();
 
+//    net->CreateNetwork();
+    LOG(CONSOLE)<<"Ending test the cnn inference accelerator1"<<endl;
 
     return ret ;
 }
