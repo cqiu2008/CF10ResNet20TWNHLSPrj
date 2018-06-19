@@ -1,0 +1,31 @@
+#================================#
+#====Configuration===============#
+#================================#
+#========HLS Accelerate==========#
+#========HLS CIFAR10=============#
+#script_name=hlsCFarScriptTemplate
+#folder_name=HLS102CFar
+#code_base_path_name=code102CFar
+#code_name=code102K25CFar
+#version_name=170930a
+#version_name=171016FixInt8ErrD
+#========HLS SqueezeNet=========#
+#script_name=hlsScriptTemplate
+#folder_name=HLS102SqueezeNet
+#code_base_path_name=code102Squeeze
+#code_name=code102Int8Squ
+##version_name=171025a
+#version_name=KF171205f
+#========HLS vgg16Net=========#
+#script_name=hlsScriptTemplate
+#folder_name=HLS102Vgg16Net
+#code_base_path_name=code102Vgg16
+#code_name=code102Int8Vgg
+#version_name=S180130a
+#========HLS CF10Res20TWN=====#
+prj_root_name=CF10Res20TWNHLSProject
+script_name=hlsScriptTemplate
+folder_name=HLS102CF10Res20TWN
+code_base_path_name=code102CF10Res20TWN
+code_name=code102CF10Res20TWN
+version_name=Git
