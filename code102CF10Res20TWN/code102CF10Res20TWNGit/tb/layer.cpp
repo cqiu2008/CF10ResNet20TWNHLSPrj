@@ -36,7 +36,7 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 	assert(k*k*ci/NUM_OF_BYTES_PER_TRANSACTION<=RAM_36K_DEPTH);//deadlock limitation
 	assert((s>=1) && (s<=MAX_KERNEL_STRIDE));
 	assert((pt>=0)&&(pt<NUM_OF_POOLING_TYPE));
-//	assert((psize>=1) && (psize<=MAX_POOLING_SIZE));//psize=0,no psize
+	assert((psize>=1) && (psize<=MAX_POOLING_SIZE));
 
 	if (psize==1){
 		assert(pstride==1);
@@ -120,6 +120,11 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 		config.size_of_output_features = (config.pooled_height*config.pooled_width*config.aligned_output_channels);
 	}
 	config.size_of_weights_and_bias = (config.num_of_bias_blocks+config.num_of_weight_blocks)*NUM_OF_BYTES_PER_TRANSACTION;
+
+	config.ibuf_type_a = ibufa;
+	config.ibuf_type_b = ibufb;
+	config.ibuf_type_c = ibufc;
+
 }
 
 

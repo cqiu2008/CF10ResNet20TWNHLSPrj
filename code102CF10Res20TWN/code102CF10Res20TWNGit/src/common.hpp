@@ -35,7 +35,7 @@
 #define MAX_CHANNEL_NUM						1024
 
 #define CI_STRIDE_MASK						4
-#define CO_STRIDE_MASK						7
+#define CO_STRIDE_MASK						5
 
 #define DATA_WIDTH							8
 

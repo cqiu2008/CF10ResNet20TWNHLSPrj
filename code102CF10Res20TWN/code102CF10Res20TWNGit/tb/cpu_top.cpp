@@ -17,9 +17,8 @@ int main(){
 
 //    timeval start,end;
     network *net = new cresnet20();
-
-//    net->CreateNetwork();
-    LOG(CONSOLE)<<"Ending test the cnn inference accelerator1"<<endl;
+    net->CreateNetwork();
+    LOGNO(CONSOLE)<<"Ending test the cnn inference accelerator1"<<endl;
 
     return ret ;
 }

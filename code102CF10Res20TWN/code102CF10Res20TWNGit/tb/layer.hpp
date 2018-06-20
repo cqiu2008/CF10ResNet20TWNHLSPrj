@@ -63,6 +63,10 @@ public:
 
 	weight_block_index_t num_of_bias_blocks;
 	weight_block_index_t num_of_weight_blocks;
+
+	ibuf_enum ibuf_type_a;
+	ibuf_enum ibuf_type_b;
+	ibuf_enum ibuf_type_c;
 };
 
 
