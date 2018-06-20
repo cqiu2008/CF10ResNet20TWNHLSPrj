@@ -120,8 +120,9 @@ void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer
 };
 
 
-bool network::LoadWeightAndBias(const char* filename){
-	ifstream input(filename);
+bool network::LoadWeightAndBias(){
+	string filename=BASE_PATH"dataCF10Res20TWN/CIKCOWeightsForFPGASUB.bin";
+	ifstream input(filename.c_str());
 	if (!input.is_open()){
 		LOG(ERROR)<<"failed to open "<<filename<<endl;
 		return false;

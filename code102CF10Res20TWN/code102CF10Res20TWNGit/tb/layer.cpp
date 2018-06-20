@@ -238,85 +238,37 @@ void layer::UpdateMemoryForWeightAndBias(weight_block_t* newptr){
 void layer::LoadGeneratedBias(ifstream& input){
 
 	weight_block_index_t index = config.num_of_weight_blocks;
-
-
+	weight_t weight = 0;
 	LOG(INFO)<<"load generated bias:"<<endl;
-
-
-	for (channel_t co_div=0;co_div<config.aligned_output_channels;co_div+=NUM_OF_BYTES_PER_TRANSACTION){
-		for (channel_t nb=0;nb<NUM_OF_BYTES_PER_TRANSACTION;nb++){
-			if ((co_div+nb)<config.output_channels){
-				input>>weights[index].w[nb];
-			}else{
-				weights[index].w[nb] = 0;
-			}
-
-//			LOG(INFO)<<setw(4)<<weights[index].w[nb]<<" ";
-
+	int num = config.output_channels ;
+	for(int i=0;i<num;i++){
+		input>>weight;
+		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
+		index += i/NUM_OF_BYTES_PER_TRANSACTION;
+		weights[index].w[w] = weight;
+		LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
+		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
+			LOG(INFO)<<endl;
 		}
-		index++;
 	}
-
-
-	LOG(INFO)<<endl;
 
 }
 
 
 void layer::LoadGeneratedWeight(ifstream& input){
-
 	weight_t weight = 0;
-
-
-//	LOGNO(INFO)<<"load generated weight:"<<endl;
-
-
-	for (channel_t i=0;i<config.output_channels;i++){
-		for (channel_t j=0;j<config.input_channels;j++){
-
-//			LOGNO(INFO)<<"co="<<i<<" ci="<<j<<endl;
-
-			for (kernel_t k=0;k<config.kernel_size;k++){
-				for (kernel_t l=0;l<config.kernel_size;l++){
-					input>>weight;
-
-//					LOGNO(INFO)<<setw(4)<<weight<<" ";
-
-					channel_t t = config.aligned_output_channels/NUM_OF_BYTES_PER_TRANSACTION;
-					weight_block_index_t weight_index = k*config.kernel_size + l;
-					weight_index *= config.aligned_input_channels*t;
-					weight_index += j*t + i/NUM_OF_BYTES_PER_TRANSACTION;
-					weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-					weights[weight_index].w[w] = weight;
-				}
-
-				LOG(INFO)<<endl;
-			}
+	LOG(INFO)<<"load generated weight:"<<endl;
+	int num = config.input_channels * config.output_channels * config.kernel_size * config.kernel_size;
+	for(int i=0;i<num;i++){
+		input>>weight;
+		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
+		int index = i/NUM_OF_BYTES_PER_TRANSACTION;
+		weights[index].w[w] = weight;
+		LOG(INFO)<<setw(4)<<weight<<" ";
+		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
 			LOG(INFO)<<endl;
 		}
-		LOG(INFO)<<endl;
 	}
-
-#if DEBUG == 1
-	LOG(INFO)<<"transformed weight:"<<endl;
-	weight_block_index_t index = 0;
-	for (kernel_t k=0;k<config.kernel_size;k++){
-		for (kernel_t l=0;l<config.kernel_size;l++){
-			for (channel_t j=0;j<config.input_channels;j+=CI_STRIDE){
-				for (channel_t n=0;n<CI_STRIDE;n++){
-					for (channel_t i=0;i<config.output_channels;i+=NUM_OF_BYTES_PER_TRANSACTION){
-						for (channel_t m=0;m<NUM_OF_BYTES_PER_TRANSACTION;m++){
-							LOG(INFO)<<setw(4)<<weights[index].w[m]<<" ";
-						}
-						index = index + 1;
-					}
-				}
-			}
-			LOG(INFO)<<endl;
-		}
-		LOG(INFO)<<endl;
-	}
-#endif
 }
 
 
