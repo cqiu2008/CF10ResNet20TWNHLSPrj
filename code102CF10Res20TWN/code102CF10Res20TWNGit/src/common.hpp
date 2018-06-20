@@ -4,6 +4,9 @@
 #include<string>
 #include<ap_int.h>
 
+#define BASE_PATH                           "../../../../../../" //--csim/build
+
+#define BATCH_NUM                           16
 
 #define SQUEEZENET							1
 

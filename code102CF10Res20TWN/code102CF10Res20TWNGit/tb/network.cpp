@@ -142,26 +142,11 @@ bool network::LoadWeightAndBias(const char* filename){
 
 bool network::LoadFeatureMap(numlayers_t first_running_layer){
 	ifstream input;
-	if (first_running_layer>0){
-		numlayers_t loading_layer = first_running_layer - 1;
-		if (layers[first_running_layer]->config.layer_type==EXPAND3x3){
-			loading_layer--;
-		}
-		input.open(("./outf/"+layers[loading_layer]->config.layer_name).c_str());
-		if (!input.is_open()){
-			LOG(ERROR)<<"failed to open "<<layers[loading_layer]->config.layer_name<<endl;
-			return false;
-		}
-	}else{
-		input.open("./dataset/infeatures.bin");
-		if (!input.is_open()){
-			LOG(ERROR)<<"failed to open infeatures.bin"<<endl;
-			return false;
-		}
+	input.open(BASE_PATH"dataCF10Res20TWN/batch16Cnv1.dat");
+	if (!input.is_open()){
+		LOG(ERROR)<<"failed to open batch16Cnv1.dat"<<endl;
 	}
-
 	layers[first_running_layer]->LoadGeneratedFeatureMap(input);
-
 	input.close();
 
 	return true;

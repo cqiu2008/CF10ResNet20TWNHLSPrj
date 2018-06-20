@@ -111,7 +111,12 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 
 	assert(config.kernel_size*config.kernel_size*config.num_of_ci_strides*config.num_of_co_strides<WEIGHT_BUF_DEPTH);
 
-	config.size_of_input_features = config.input_height*config.input_width*config.aligned_input_channels;
+	if(name.find("conv2")){
+		config.size_of_input_features = BATCH_NUM * config.input_height*config.input_width*config.aligned_input_channels;
+	}else{
+		config.size_of_input_features = config.input_height*config.input_width*config.aligned_input_channels;
+	}
+
 	if (config.pooling_type==AVG_POOLING){
 		config.size_of_output_features = 4*(config.pooled_height*config.pooled_width*config.aligned_output_channels);
 	}else if ((config.layer_type==EXPAND3x3) || (config.layer_type==EXPAND1x1)){
@@ -347,55 +352,18 @@ void layer::LoadGeneratedFeatureMap(ifstream& input){
 
 	feature_block_index_t index = 0;
 
-#if DEBUG == 1
+
 	LOG(INFO)<<"load generated feature:"<<endl;
-#endif
 
-	for (dimension_t j=0;j<config.input_height;j++){
-		for (dimension_t k=0;k<config.input_width;k++){
-#if DEBUG == 1
-			LOG(INFO)<<"row="<<j<<" col="<<k<<endl;
-#endif
-			for (channel_t i=0;i<config.input_channels;i+=CI_STRIDE){
-				for (channel_t m=0;m<CI_STRIDE;m+=NUM_OF_BYTES_PER_TRANSACTION){
-					for (channel_t l=0;l<NUM_OF_BYTES_PER_TRANSACTION;l++){
-						if ((i+m+l)<config.input_channels){
-							input>>input_features[index].f[l];
-#if DEBUG == 1
-							LOG(INFO)<<setw(4)<<input_features[index].f[l]<<" ";
-#endif
-						}else{
-							input_features[index].f[l] = 0;
-						}
-					}
-					index = index + 1;
-				}
-			}
-#if DEBUG == 1
-			LOG(INFO)<<endl;
-#endif
-		}
-#if DEBUG == 1
-		LOG(INFO)<<endl;
-#endif
-	}
+	int num = config.input_height * config.input_width * config.input_channels;
 
-#if DEBUG == 1
-	LOG(INFO)<<"transformed feature:"<<endl;
-	for (channel_t i=0;i<config.input_channels;i++){
-		LOG(INFO)<<"channel "<<i<<endl;
-		for (dimension_t j=0;j<config.input_height;j++){
-			for (dimension_t k=0;k<config.input_width;k++){
-				channel_t m = config.num_of_ci_strides*(CI_STRIDE/NUM_OF_BYTES_PER_TRANSACTION);
-				feature_block_index_t index = (j*config.input_width+k)*m + i/NUM_OF_BYTES_PER_TRANSACTION;
-				LOG(INFO)<<setw(4)<<input_features[index].f[i%NUM_OF_BYTES_PER_TRANSACTION]<<" ";
-			}
-			LOG(INFO)<<endl;
+	for (int i = 0;i < num;i++){
+		for (channel_t m=0;m<BATCH_NUM;m++){
+			input>>input_features[i].f[m];
+			LOG(INFO)<<setw(4)<<input_features[i].f[m]<<" ";
 		}
 		LOG(INFO)<<endl;
 	}
-	LOG(INFO)<<endl;
-#endif
 }
 
 
