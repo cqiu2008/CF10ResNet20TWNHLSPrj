@@ -111,7 +111,9 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 
 	assert(config.kernel_size*config.kernel_size*config.num_of_ci_strides*config.num_of_co_strides<WEIGHT_BUF_DEPTH);
 
-	if(name.find("conv2")){
+	std::size_t found = config.layer_name.find("conv2");
+
+	if(found!=std::string::npos){
 		config.size_of_input_features = BATCH_NUM * config.input_height*config.input_width*config.aligned_input_channels;
 	}else{
 		config.size_of_input_features = config.input_height*config.input_width*config.aligned_input_channels;
