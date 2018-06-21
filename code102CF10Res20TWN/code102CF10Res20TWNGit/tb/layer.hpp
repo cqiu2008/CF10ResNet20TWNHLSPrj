@@ -64,6 +64,7 @@ public:
 	weight_block_index_t num_of_bias_blocks;
 	weight_block_index_t num_of_weight_blocks;
 
+	feature_t factor;
 	ibuf_enum ibuf_type_a;
 	ibuf_enum ibuf_type_b;
 	ibuf_enum ibuf_type_c;
@@ -78,7 +79,7 @@ public:
 			bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co, kernel_t k,
 			pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
 			pooling_stride_t pstride,
-			ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
+			feature_t factor,ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
 			shift_t dpi,shift_t dpo, shift_t wpo, shift_t bpo);
 
 	void PrintLayer();

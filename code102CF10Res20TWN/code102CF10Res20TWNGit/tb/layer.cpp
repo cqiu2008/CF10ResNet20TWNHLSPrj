@@ -20,7 +20,7 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 		dimension_t h, bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co,
 		kernel_t k, pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
 		pooling_stride_t pstride,
-		ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
+		feature_t factor,ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
 		shift_t dpi,shift_t dpo, shift_t wpo, shift_t bpo){
 
 	assert((t>=0) && (t<NUM_OF_LAYER_TYPE));
@@ -106,14 +106,13 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 	config.num_of_bias_blocks = config.aligned_output_channels/NUM_OF_BYTES_PER_TRANSACTION;
 	assert(config.num_of_bias_blocks < MAX_NUM_OF_BIAS_BLOCKS);
 
-	config.num_of_weight_blocks = config.kernel_size*config.kernel_size*config.aligned_input_channels*config.aligned_output_channels/NUM_OF_BYTES_PER_TRANSACTION;
+	config.num_of_weight_blocks = config.kernel_size*config.kernel_size*config.aligned_input_channels*config.aligned_output_channels/(TWN_ONE_BYTE_DOTS*NUM_OF_BYTES_PER_TRANSACTION);
 	assert(config.num_of_weight_blocks < MAX_NUM_OF_WEIGHT_BLOCKS);
 
 	assert(config.kernel_size*config.kernel_size*config.num_of_ci_strides*config.num_of_co_strides<WEIGHT_BUF_DEPTH);
 
-	std::size_t found = config.layer_name.find("conv2");
 
-	if(found!=std::string::npos){
+	if(config.layer_name.compare("conv2") == 0){
 		config.size_of_input_features = BATCH_NUM * config.input_height*config.input_width*config.aligned_input_channels;
 	}else{
 		config.size_of_input_features = config.input_height*config.input_width*config.aligned_input_channels;
@@ -128,6 +127,7 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 	}
 	config.size_of_weights_and_bias = (config.num_of_bias_blocks+config.num_of_weight_blocks)*NUM_OF_BYTES_PER_TRANSACTION;
 
+	config.factor = factor;
 	config.ibuf_type_a = ibufa;
 	config.ibuf_type_b = ibufb;
 	config.ibuf_type_c = ibufc;
@@ -213,6 +213,14 @@ void layer::PrintLayer(){
 	LOG(CONSOLE)<<endl;
 }
 
+void layer::AllocateMemoryForInputFeature(){
+	input_features = new feature_block_t[config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION];
+	if (input_features == NULL){
+		LOG(ERROR)<<"Error: failed to allocate memory(input_features)"<<endl;
+	}else{
+		memset(input_features,0,sizeof(feature_block_t)*config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION);
+	}
+}
 
 void layer::AllocateMemoryForWeightAndBias(){
 	weights = new weight_block_t[config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION];
@@ -241,7 +249,6 @@ void layer::LoadGeneratedBias(ifstream& input){
 
 	weight_block_index_t index = config.num_of_weight_blocks;
 	weight_t weight = 0;
-	LOG(INFO)<<"load generated bias:"<<endl;
 	int num = config.output_channels ;
 	for(int i=0;i<num;i++){
 		input>>weight;
@@ -259,8 +266,7 @@ void layer::LoadGeneratedBias(ifstream& input){
 
 void layer::LoadGeneratedWeight(ifstream& input){
 	weight_t weight = 0;
-	LOG(INFO)<<"load generated weight:"<<endl;
-	int num = config.input_channels * config.output_channels * config.kernel_size * config.kernel_size;
+	int num = config.num_of_weight_blocks * NUM_OF_BYTES_PER_TRANSACTION;
 	for(int i=0;i<num;i++){
 		input>>weight;
 		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
@@ -274,14 +280,7 @@ void layer::LoadGeneratedWeight(ifstream& input){
 }
 
 
-void layer::AllocateMemoryForInputFeature(){
-	input_features = new feature_block_t[config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION];
-	if (input_features == NULL){
-		LOG(ERROR)<<"Error: failed to allocate memory(input_features)"<<endl;
-	}else{
-		memset(input_features,0,sizeof(feature_block_t)*config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION);
-	}
-}
+
 
 
 void layer::ReleaseMemoryForInputFeature(){

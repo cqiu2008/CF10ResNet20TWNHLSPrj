@@ -19,15 +19,19 @@ int main(){
 	assert((CO_STRIDE%NUM_OF_BYTES_PER_TRANSACTION)==0);
 	assert(CI_STRIDE*CO_STRIDE<=MAX_NUM_OF_DSP_AVAILABLE);
 	LOG(CONSOLE)<<"fully connected layer is not implemented"<<endl;
-    timeval start,end;
+//    timeval start,end;
     network *net = new cresnet20();
     net->CreateNetwork();
     assert((STARTING_LAYER>=0) && (STARTING_LAYER<net->GetNumOfLayers()));
-    net->LoadFeatureMap(STARTING_LAYER);
+//    net->LoadFeatureMap(STARTING_LAYER);
     net->LoadWeightAndBias();
-    net->StatMemoryUsage();
+    LOG(CONSOLE)<<"finished LoadWeightAndBias"<<endl;
+//    net->StatMemoryUsage();
 
-
+    int a=4,b=5;
+    int c;
+    Accelerator(a,b,c);
+    LOG(CONSOLE)<<"c="<<c<<endl;
 
 
 

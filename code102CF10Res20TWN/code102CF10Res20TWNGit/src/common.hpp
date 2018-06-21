@@ -6,6 +6,8 @@
 
 #define BASE_PATH                           "../../../../../../" //--csim/build
 
+#define TWN_ONE_BYTE_DOTS                   4
+
 #define BATCH_NUM                           16
 
 #define SQUEEZENET							1

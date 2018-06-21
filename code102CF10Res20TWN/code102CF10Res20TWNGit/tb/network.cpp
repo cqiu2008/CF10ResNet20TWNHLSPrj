@@ -104,7 +104,7 @@ void network::UpdateLayer(int pos, layer* l){
 void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w,
 		dimension_t h, bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co,
 		kernel_t k, pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
-		pooling_stride_t pstride, ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
+		pooling_stride_t pstride, feature_t factor,ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
 		shift_t dpi,shift_t dpo, shift_t wpo, shift_t bpo) {
 
 	assert((t>=0) && (t<NUM_OF_LAYER_TYPE));
@@ -112,7 +112,7 @@ void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer
 	case CNV:
 	case EXPAND1x1:
 	case EXPAND3x3:
-		AppendLayer(new cnv_layer(name,t,nsbl,sbl,w,h,fr,wr,br,wc,ci,co,k,p,s,r,pt,psize,ppad,pstride,ibufa,ibufb,ibufc,dpi,dpo,wpo,bpo));
+		AppendLayer(new cnv_layer(name,t,nsbl,sbl,w,h,fr,wr,br,wc,ci,co,k,p,s,r,pt,psize,ppad,pstride,factor,ibufa,ibufb,ibufc,dpi,dpo,wpo,bpo));
 		break;
 	default:
 		break;
@@ -121,7 +121,7 @@ void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer
 
 
 bool network::LoadWeightAndBias(){
-	string filename=BASE_PATH"dataCF10Res20TWN/CIKCOWeightsForFPGASUB.bin";
+	string filename=BASE_PATH"dataCF10Res20TWN/CIKCOWeightsForFPGATWN.bin";
 	ifstream input(filename.c_str());
 	if (!input.is_open()){
 		LOG(ERROR)<<"failed to open "<<filename<<endl;
@@ -130,8 +130,10 @@ bool network::LoadWeightAndBias(){
 
 	for (numlayers_t i=0;i<num_of_layers;i++){
 		LOG(CONSOLE)<<"loading weight for layer "<<i<<endl;
+		LOG(INFO)<<"loading weight for layer "<<i<<endl;
 		layers[i]->LoadGeneratedWeight(input);
 		LOG(CONSOLE)<<"loading bias for layer "<<i<<endl;
+		LOG(INFO)<<"loading bias for layer "<<i<<endl;
 		layers[i]->LoadGeneratedBias(input);
 	}
 
