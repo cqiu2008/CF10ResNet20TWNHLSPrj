@@ -101,8 +101,7 @@ void network::UpdateLayer(int pos, layer* l){
 }
 
 
-//void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w,
-void network::AddLayer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w,
+void network::AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w,
 		dimension_t h, bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co,
 		kernel_t k, pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
 		pooling_stride_t pstride, ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,

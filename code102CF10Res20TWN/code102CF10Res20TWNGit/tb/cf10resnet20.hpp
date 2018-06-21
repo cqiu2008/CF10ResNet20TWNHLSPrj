@@ -9,7 +9,7 @@ public:
 	cresnet20();
 	virtual ~cresnet20();
 	virtual void CreateNetwork();
-//	virtual void StatMemoryUsage();
+	virtual void StatMemoryUsage();
 //	virtual void OptimizeNetwork();
 private:
 	cresnet20(const cresnet20& cres20);

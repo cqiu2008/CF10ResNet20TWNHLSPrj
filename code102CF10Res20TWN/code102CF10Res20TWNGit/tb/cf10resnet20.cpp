@@ -49,3 +49,23 @@ void cresnet20::CreateNetwork(){
 	AddLayer("conv20", CNV,    1,  0,   8,  8, false, false, false, UNCOMPRESS,64, 64,3,   1,     1, true, MAX_POOLING,    1,   0,      1,  M   ,   OUT ,   NADD,   4,  4,  7,  5);
 	AddLayer("conv21", CNV,    1,  0,   8,  8, false, false, false, UNCOMPRESS,64, 64,3,   1,     1, true, MAX_POOLING,    1,   0,      1,  ADD ,   M   ,   OUT ,   4,  4,  7,  5);
 }
+void cresnet20::StatMemoryUsage(){
+	LOG(CONSOLE)<<"calculate weights offset"<<endl;
+
+	for(numlayers_t i=0;i<GetNumOfLayers();i++){
+		GetLayer(i)->config.weight_offset = GetSizeOfWeights();
+		IncreaseSizeOfWeights(GetLayer(i)->config.size_of_weights_and_bias);
+		LOG(CONSOLE)<<GetLayer(i)->config.layer_name<<endl;
+		LOG(CONSOLE)<<" offset "<<GetLayer(i)->config.weight_offset<<endl;
+		LOG(CONSOLE)<<" size "<<(GetSizeOfWeights()-GetLayer(i)->config.weight_offset)<<endl;
+	}
+	LOG(CONSOLE)<<"total weights "<<GetSizeOfWeights()<<endl;
+
+	LOG(CONSOLE)<<"calculate features offset"<<endl;
+	int input_feature_offset = GetSizeOfWeights();
+	GetLayer(0)->config.input_feature_offset = input_feature_offset;
+	GetLayer(0)->config.output_feature_offset = GetLayer(0)->config.input_feature_offset+GetLayer(0)->config.size_of_input_features;
+	IncreaseSizeOfFeatures(GetLayer(0)->config.size_of_input_features+1000);
+}
+
+

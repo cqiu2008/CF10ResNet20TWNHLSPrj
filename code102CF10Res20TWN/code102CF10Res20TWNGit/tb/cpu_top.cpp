@@ -25,6 +25,8 @@ int main(){
     assert((STARTING_LAYER>=0) && (STARTING_LAYER<net->GetNumOfLayers()));
     net->LoadFeatureMap(STARTING_LAYER);
     net->LoadWeightAndBias();
+    net->StatMemoryUsage();
+
 
 
 
