@@ -7,7 +7,7 @@
 #include<cassert>
 #include<cmath>
 
-#include"common.hpp"
+#include"../src/common.hpp"
 #include"logger.hpp"
 
 using namespace std;
@@ -75,36 +75,36 @@ class layer {
 public:
 	virtual ~layer();
 	layer(const layer& l);
-	layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w, dimension_t h,
-			bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co, kernel_t k,
-			pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
-			pooling_stride_t pstride,
-			feature_t factor,ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
-			shift_t dpi,shift_t dpo, shift_t wpo, shift_t bpo);
+	layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl, dimension_t& w,
+			dimension_t& h, bool& fr, bool& wr, bool& br, weight_compress_t& wc, channel_t& ci, channel_t& co,
+			kernel_t& k, pad_t& p, stride_t& s, bool& r, pooling_enum& pt, pooling_size_t& psize, pooling_size_t& ppad,
+			pooling_stride_t& pstride,
+			feature_t& factor,ibuf_enum& ibufa, ibuf_enum& ibufb, ibuf_enum& ibufc,
+			shift_t& dpi,shift_t& dpo, shift_t& wpo, shift_t& bpo);
 
 	void PrintLayer();
 	void MakeInstructionGroup();
 
 	virtual void CompressWeights(){}
 
-	virtual void TransformFeatureMap(){}
-	virtual void TransformConfiguration(){}
-	virtual void TransformWeightsAndBias(){}
+//	virtual void TransformFeatureMap(){}
+//	virtual void TransformConfiguration(){}
+//	virtual void TransformWeightsAndBias(){}
 
 	void LoadGeneratedBias(ifstream& input);
 	void LoadGeneratedWeight(ifstream& input);
 
-	void LoadGeneratedFeatureMap(ifstream& input);
+//	void LoadGeneratedFeatureMap(ifstream& input);
 
-	void UpdateMemoryForInputFeature(feature_block_t*);
-	void UpdateMemoryForWeightAndBias(weight_block_t*);
-	void UpdateMemoryForOutputFeature(feature_block_t*);
+//	void UpdateMemoryForInputFeature(feature_block_t*);
+//	void UpdateMemoryForWeightAndBias(weight_block_t*);
+//	void UpdateMemoryForOutputFeature(feature_block_t*);
 
-	int CheckConvolutionResults(const char* filename);
+//	int CheckConvolutionResults(const char* filename);
 
 protected:
 	void AllocateMemoryForWeightAndBias();
-	void AllocateMemoryForInputFeature();
+//	void AllocateMemoryForInputFeature();
 
 public:
 	config_t config;
@@ -115,8 +115,8 @@ public:
 
 private:
 	layer& operator=(const layer& l);
-	void ReleaseMemoryForWeightAndBias();
-	void ReleaseMemoryForInputFeature();
+//	void ReleaseMemoryForWeightAndBias();
+//	void ReleaseMemoryForInputFeature();
 };
 
 

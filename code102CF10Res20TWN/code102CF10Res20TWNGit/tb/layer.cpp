@@ -16,12 +16,12 @@ layer& layer::operator=(const layer& l){
 }
 
 
-layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, dimension_t w,
-		dimension_t h, bool fr, bool wr, bool br, weight_compress_t wc, channel_t ci, channel_t co,
-		kernel_t k, pad_t p, stride_t s, bool r, pooling_enum pt, pooling_size_t psize, pooling_size_t ppad,
-		pooling_stride_t pstride,
-		feature_t factor,ibuf_enum ibufa, ibuf_enum ibufb, ibuf_enum ibufc,
-		shift_t dpi,shift_t dpo, shift_t wpo, shift_t bpo){
+layer::layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl, dimension_t& w,
+		dimension_t& h, bool& fr, bool& wr, bool& br, weight_compress_t& wc, channel_t& ci, channel_t& co,
+		kernel_t& k, pad_t& p, stride_t& s, bool& r, pooling_enum& pt, pooling_size_t& psize, pooling_size_t& ppad,
+		pooling_stride_t& pstride,
+		feature_t& factor,ibuf_enum& ibufa, ibuf_enum& ibufb, ibuf_enum& ibufc,
+		shift_t& dpi,shift_t& dpo, shift_t& wpo, shift_t& bpo){
 
 	assert((t>=0) && (t<NUM_OF_LAYER_TYPE));
 	assert(nsbl>0);
@@ -44,10 +44,6 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 
 	if (pstride==1){
 		assert(psize==1);
-	}
-
-	if (config.pooling_size>config.pooling_stride){
-		LOG(CONSOLE)<<config.layer_name<<": pooling_size>pooling_stride which might introduce redundant computing"<<endl;
 	}
 
 	config.layer_name = name;
@@ -132,61 +128,16 @@ layer::layer(std::string name, layer_enum t, sublayer_t nsbl, sublayer_t sbl, di
 	config.ibuf_type_b = ibufb;
 	config.ibuf_type_c = ibufc;
 
+	LOG(CONSOLE)<<config.layer_name<<endl;
+	LOG(CONSOLE)<<"config.num_of_weight_blocks="<<config.num_of_weight_blocks<<endl;
+	LOG(CONSOLE)<<"config.num_of_bias_blocks="<<config.num_of_bias_blocks<<endl;
+
+	if (config.pooling_size>config.pooling_stride){
+		LOG(CONSOLE)<<config.layer_name<<": pooling_size>pooling_stride which might introduce redundant computing"<<endl;
+	}
+
 }
 
-
-void layer::MakeInstructionGroup(){
-	//misc instruction format
-	//4bits: layer_type
-	//1bits: relu
-	//1bits: pad
-	//4bits: kernel_size
-	//4bits: stride
-	//2bits: pooling_type
-	//5bits: pooling_size
-	//5bits: pooling_stride
-	//1bits: pooling_pad
-	//1bits: freuse
-	//2bits: weight_compress
-	//1bits: wreuse
-	//1bits: breuse
-	insts.imisc = 0;
-	insts.imisc |= ((int(config.layer_type&0xf))<<28);
-	insts.imisc |= ((int(config.relu&1))<<27);
-	insts.imisc |= ((int((config.pad>0)&1))<<26);
-	insts.imisc |= ((int(config.kernel_size&0xf))<<22);
-	insts.imisc |= ((int(config.stride&0xf))<<18);
-	insts.imisc |= ((int(config.pooling_type&0x3))<<16);
-	insts.imisc |= ((int(config.pooling_size&0x1f))<<11);
-	insts.imisc |= ((int(config.pooling_stride&0x1f))<<6);
-	insts.imisc |= ((int(config.pooling_pad&0x1))<<5);
-	insts.imisc |= ((int(config.freuse&0x1))<<4);
-	insts.imisc |= ((int(config.wcompress&0x3))<<2);
-	insts.imisc |= ((int(config.wreuse&0x1))<<1);
-	insts.imisc |= (int(config.breuse&0x1));
-	//shift instruction format
-	//5bits: dpi
-	//5bits: dpo
-	//5bits: bpo
-	//5bits: wpo
-	//6bits: nsbl
-	//6bits: sbl
-	insts.ishift = 0;
-	insts.ishift |= ((int(config.dpi&0x1f))<<27);
-	insts.ishift |= ((int(config.dpo&0x1f))<<22);
-	insts.ishift |= ((int(config.bpo&0x1f))<<17);
-	insts.ishift |= ((int(config.wpo&0x1f))<<12);
-	insts.ishift |= ((int(config.nsbl&0x3f))<<6);
-	insts.ishift |= int(config.sbl&0x3f);
-	//dimension instruction format
-	//8bits: width,height
-	//12bits: input channel
-	//12bits: output channel
-	insts.idimension = 0;
-	insts.idimension |= ((int(config.input_width&0xff))<<24);
-	insts.idimension |= ((int(config.input_channels&0xfff))<<12);
-	insts.idimension |= (int(config.output_channels&0xfff));
-}
 
 
 void layer::PrintLayer(){
@@ -213,6 +164,56 @@ void layer::PrintLayer(){
 	LOG(CONSOLE)<<endl;
 }
 
+void layer::AllocateMemoryForWeightAndBias(){
+	LOG(CONSOLE)<<"config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION="<<config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION<<endl;
+
+	//// there is a bug by cqiu ,why 2
+	int num_weights_bias = 2*config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION;
+
+	weights = new weight_block_t[num_weights_bias];
+	if (weights == NULL){
+		LOG(ERROR)<<"Error: failed to allocate memory(weights+bias)"<<endl;
+	}else{
+		memset(weights,0,sizeof(weight_block_t)*num_weights_bias);
+	}
+}
+
+void layer::LoadGeneratedWeight(ifstream& input){
+	weight_t weight = 0;
+	int num = config.num_of_weight_blocks * NUM_OF_BYTES_PER_TRANSACTION;
+	LOG(CONSOLE)<<"LoadGenerateWeight Num="<<num<<endl;
+	for(int i=0;i<num;i++){
+		input>>weight;
+		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
+		int index = i/NUM_OF_BYTES_PER_TRANSACTION;
+		weights[index].w[w] = weight;
+		LOG(INFO)<<setw(4)<<weight<<" ";
+		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
+			LOG(INFO)<<endl;
+		}
+	}
+}
+void layer::LoadGeneratedBias(ifstream& input){
+
+	weight_block_index_t index = config.num_of_weight_blocks;
+	weight_t weight = 0;
+	int num = config.aligned_output_channels ;
+	LOG(CONSOLE)<<"LoadGeneratedBias Num="<<num<<endl;
+	for(int i=0;i<num;i++){
+		input>>weight;
+		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
+		index += (i/NUM_OF_BYTES_PER_TRANSACTION);
+		weights[index].w[w] = weight;
+		LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
+		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
+			LOG(INFO)<<endl;
+		}
+	}
+
+}
+
+
+#if 0
 void layer::AllocateMemoryForInputFeature(){
 	input_features = new feature_block_t[config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION];
 	if (input_features == NULL){
@@ -222,14 +223,7 @@ void layer::AllocateMemoryForInputFeature(){
 	}
 }
 
-void layer::AllocateMemoryForWeightAndBias(){
-	weights = new weight_block_t[config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION];
-	if (weights == NULL){
-		LOG(ERROR)<<"Error: failed to allocate memory(weights+bias)"<<endl;
-	}else{
-		memset(weights,0,sizeof(weight_block_t)*config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION);
-	}
-}
+
 
 
 void layer::ReleaseMemoryForWeightAndBias(){
@@ -245,39 +239,10 @@ void layer::UpdateMemoryForWeightAndBias(weight_block_t* newptr){
 }
 
 
-void layer::LoadGeneratedBias(ifstream& input){
-
-	weight_block_index_t index = config.num_of_weight_blocks;
-	weight_t weight = 0;
-	int num = config.output_channels ;
-	for(int i=0;i<num;i++){
-		input>>weight;
-		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-		index += i/NUM_OF_BYTES_PER_TRANSACTION;
-		weights[index].w[w] = weight;
-		LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
-		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
-			LOG(INFO)<<endl;
-		}
-	}
-
-}
 
 
-void layer::LoadGeneratedWeight(ifstream& input){
-	weight_t weight = 0;
-	int num = config.num_of_weight_blocks * NUM_OF_BYTES_PER_TRANSACTION;
-	for(int i=0;i<num;i++){
-		input>>weight;
-		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-		int index = i/NUM_OF_BYTES_PER_TRANSACTION;
-		weights[index].w[w] = weight;
-		LOG(INFO)<<setw(4)<<weight<<" ";
-		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
-			LOG(INFO)<<endl;
-		}
-	}
-}
+
+
 
 
 
@@ -299,143 +264,25 @@ void layer::UpdateMemoryForInputFeature(feature_block_t* newptr){
 void layer::UpdateMemoryForOutputFeature(feature_block_t* newptr){
 	output_features = newptr;
 }
-
-
-void layer::LoadGeneratedFeatureMap(ifstream& input){
-
-	feature_block_index_t index = 0;
-
-
-	LOG(INFO)<<"load generated feature:"<<endl;
-
-	int num = config.input_height * config.input_width * config.input_channels;
-
-	for (int i = 0;i < num;i++){
-		for (channel_t m=0;m<BATCH_NUM;m++){
-			input>>input_features[i].f[m];
-			LOG(INFO)<<setw(4)<<input_features[i].f[m]<<" ";
-		}
-		LOG(INFO)<<endl;
-	}
-}
-
-
-int layer::CheckConvolutionResults(const char* filename){
-	feature_t feature;
-	int error_count = 0;
-	feature_block_index_t index = 0;
-
-	ifstream input(filename);
-	if (!input.is_open()){
-		LOG(ERROR)<<"failed to open "<<config.layer_name<<endl;
-		return -1;
-	}
-
-#if DEBUG == 1
-	LOG(INFO)<<"output features:"<<endl;
-	feature_block_index_t idx = 0;
-	for (dimension_t row=0;row<config.pooled_height;row++){
-		for (dimension_t col=0;col<config.pooled_width;col++){
-			for (int co_div=0;co_div<2*config.aligned_output_channels;co_div+=CI_STRIDE){
-				for (channel_t co_idx=0;co_idx<CI_STRIDE;co_idx+=NUM_OF_BYTES_PER_TRANSACTION){
-					for (channel_t nb=0;nb<NUM_OF_BYTES_PER_TRANSACTION;nb++){
-						LOG(INFO)<<setw(4)<<output_features[idx].f[nb]<<" ";
-					}
-					idx++;
-				}
-			}
-			LOG(INFO)<<endl;
-		}
-		LOG(INFO)<<endl;
-	}
 #endif
 
-	LOG(CONSOLE)<<"checking results from "<<(unsigned long)output_features<<endl;
 
-	if (config.pooling_type==AVG_POOLING){
-		accumulator_t accumulator = 0;
-		accumulator_t* output_results = (accumulator_t*)output_features;
-		for (dimension_t row=0;row<config.pooled_height;row++){
-			for (dimension_t col=0;col<config.pooled_width;col++){
-				for (int co=0;co<config.aligned_output_channels;co++){
-					input>>accumulator;
-					if (accumulator!=output_results[index]){
-						LOG(CONSOLE)<<"["<<row<<"]["<<col<<"]["<<co<<"]:";
-						LOG(CONSOLE)<<" expected "<<accumulator;
-						LOG(CONSOLE)<<" got "<<output_results[index]<<endl;
-						LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<co<<"]:";
-						LOG(INFO)<<" expected "<<accumulator;
-						LOG(INFO)<<" got "<<output_results[index]<<endl;
-						error_count++;
-					}
-#if DEBUG == 1
-					else{
-						LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<co<<"]:"<<feature<<endl;
-					}
-#endif
-					index++;
-				}
-			}
-		}
-	}else if ((config.layer_type==EXPAND1x1)||(config.layer_type==EXPAND3x3)){
-		for (dimension_t row=0;row<config.pooled_height;row++){
-			for (dimension_t col=0;col<config.pooled_width;col++){
-				for (int co_div=0;co_div<2*config.aligned_output_channels;co_div+=CI_STRIDE){
-					for (channel_t co_idx=0;co_idx<CI_STRIDE;co_idx+=NUM_OF_BYTES_PER_TRANSACTION){
-						for (channel_t nb=0;nb<NUM_OF_BYTES_PER_TRANSACTION;nb++){
-							input>>feature;
-							if ((feature!=output_features[index].f[nb]) && (((config.layer_type==EXPAND3x3)&&(co_div>=config.aligned_output_channels))||((config.layer_type==EXPAND1x1)&&(co_div<config.aligned_output_channels)))){
-								LOG(CONSOLE)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:";
-								LOG(CONSOLE)<<" expected "<<feature;
-								LOG(CONSOLE)<<" got "<<output_features[index].f[nb]<<endl;
-								LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:";
-								LOG(INFO)<<" expected "<<feature;
-								LOG(INFO)<<" got "<<output_features[index].f[nb]<<endl;
-								error_count++;
-							}
-		#if DEBUG == 1
-							else{
-								LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:"<<feature<<endl;
-							}
-		#endif
-						}
-					}
-					index++;
-				}
-			}
-		}
-	}else{
-		for (dimension_t row=0;row<config.pooled_height;row++){
-			for (dimension_t col=0;col<config.pooled_width;col++){
-				for (int co_div=0;co_div<config.aligned_output_channels;co_div+=CI_STRIDE){
-					for (channel_t co_idx=0;co_idx<CI_STRIDE;co_idx+=NUM_OF_BYTES_PER_TRANSACTION){
-						for (channel_t nb=0;nb<NUM_OF_BYTES_PER_TRANSACTION;nb++){
-							if ((co_div+co_idx+nb)<config.aligned_output_channels){
-								input>>feature;
-								if (feature!=output_features[index].f[nb]){
-									LOG(CONSOLE)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:";
-									LOG(CONSOLE)<<" expected "<<feature;
-									LOG(CONSOLE)<<" got "<<output_features[index].f[nb]<<endl;
-									LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:";
-									LOG(INFO)<<" expected "<<feature;
-									LOG(INFO)<<" got "<<output_features[index].f[nb]<<endl;
-									error_count++;
-								}
-#if DEBUG == 1
-								else{
-									LOG(INFO)<<"["<<row<<"]["<<col<<"]["<<(co_div+co_idx+nb)<<"]:"<<feature<<endl;
-								}
-#endif
-							}
-						}
-						index++;
-					}
-				}
-			}
-		}
-	}
+//void layer::LoadGeneratedFeatureMap(ifstream& input){
+//
+//	feature_block_index_t index = 0;
+//
+//
+//	LOG(INFO)<<"load generated feature:"<<endl;
+//
+//	int num = config.input_height * config.input_width * config.input_channels;
+//
+//	for (int i = 0;i < num;i++){
+//		for (channel_t m=0;m<BATCH_NUM;m++){
+//			input>>input_features[i].f[m];
+//			LOG(INFO)<<setw(4)<<input_features[i].f[m]<<" ";
+//		}
+//		LOG(INFO)<<endl;
+//	}
+//}
 
-	input.close();
 
-	return error_count;
-}

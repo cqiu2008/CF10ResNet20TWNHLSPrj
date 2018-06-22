@@ -24,7 +24,7 @@ public:
 	  virtual void StatMemoryUsage() = 0;
 
 	  bool LoadWeightAndBias();
-	  bool LoadFeatureMap(numlayers_t first_running_layer);
+//	  bool LoadFeatureMap(numlayers_t first_running_layer);
 
 	  numlayers_t GetNumOfLayers(){return num_of_layers;}
 
@@ -53,7 +53,7 @@ protected:
 
 	  numlayers_t GetNumOfLayersCombined(){return num_of_layers_combined;}
 
-	  void AddLayer(const char* name, layer_enum t, sublayer_t nsbl, sublayer_t sbl,
+	  void AddLayer(std::string  name, layer_enum t, sublayer_t nsbl, sublayer_t sbl,
 			  dimension_t w, dimension_t h, bool fr, bool wr, bool br, weight_compress_t wc,
 			  channel_t ci, channel_t co, kernel_t k, pad_t p, stride_t s, bool r, pooling_enum pt,
 			  pooling_size_t psize, pooling_size_t ppad, pooling_stride_t pstride,
