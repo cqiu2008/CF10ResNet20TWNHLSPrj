@@ -24,7 +24,7 @@ public:
 	  virtual void StatMemoryUsage() = 0;
 
 	  bool LoadWeightAndBias();
-//	  bool LoadFeatureMap(numlayers_t first_running_layer);
+	  bool LoadFeatureMap(numlayers_t first_running_layer);
 
 	  numlayers_t GetNumOfLayers(){return num_of_layers;}
 

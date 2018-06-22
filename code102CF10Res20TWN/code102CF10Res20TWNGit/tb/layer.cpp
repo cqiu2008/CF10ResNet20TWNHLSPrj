@@ -138,8 +138,6 @@ layer::layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl
 
 }
 
-
-
 void layer::PrintLayer(){
 	LOG(CONSOLE)<<config.layer_name<<"\t";
 	LOG(CONSOLE)<<config.layer_type<<"\t";
@@ -166,10 +164,8 @@ void layer::PrintLayer(){
 
 void layer::AllocateMemoryForWeightAndBias(){
 	LOG(CONSOLE)<<"config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION="<<config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION<<endl;
-
 	//// there is a bug by cqiu ,why 2
 	int num_weights_bias = 2*config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION;
-
 	weights = new weight_block_t[num_weights_bias];
 	if (weights == NULL){
 		LOG(ERROR)<<"Error: failed to allocate memory(weights+bias)"<<endl;
@@ -209,11 +205,9 @@ void layer::LoadGeneratedBias(ifstream& input){
 			LOG(INFO)<<endl;
 		}
 	}
-
 }
 
 
-#if 0
 void layer::AllocateMemoryForInputFeature(){
 	input_features = new feature_block_t[config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION];
 	if (input_features == NULL){
@@ -222,8 +216,6 @@ void layer::AllocateMemoryForInputFeature(){
 		memset(input_features,0,sizeof(feature_block_t)*config.size_of_input_features/NUM_OF_BYTES_PER_TRANSACTION);
 	}
 }
-
-
 
 
 void layer::ReleaseMemoryForWeightAndBias(){
@@ -237,15 +229,6 @@ void layer::UpdateMemoryForWeightAndBias(weight_block_t* newptr){
 	ReleaseMemoryForWeightAndBias();
 	weights = newptr;
 }
-
-
-
-
-
-
-
-
-
 
 
 void layer::ReleaseMemoryForInputFeature(){
@@ -264,25 +247,24 @@ void layer::UpdateMemoryForInputFeature(feature_block_t* newptr){
 void layer::UpdateMemoryForOutputFeature(feature_block_t* newptr){
 	output_features = newptr;
 }
-#endif
 
 
-//void layer::LoadGeneratedFeatureMap(ifstream& input){
-//
-//	feature_block_index_t index = 0;
-//
-//
-//	LOG(INFO)<<"load generated feature:"<<endl;
-//
-//	int num = config.input_height * config.input_width * config.input_channels;
-//
-//	for (int i = 0;i < num;i++){
-//		for (channel_t m=0;m<BATCH_NUM;m++){
-//			input>>input_features[i].f[m];
-//			LOG(INFO)<<setw(4)<<input_features[i].f[m]<<" ";
-//		}
-//		LOG(INFO)<<endl;
-//	}
-//}
+void layer::LoadGeneratedFeatureMap(ifstream& input){
+
+	feature_block_index_t index = 0;
+
+
+	LOG(INFO)<<"load generated feature:"<<endl;
+
+	int num = config.input_height * config.input_width * config.input_channels;
+
+	for (int i = 0;i < num;i++){
+		for (channel_t m=0;m<BATCH_NUM;m++){
+			input>>input_features[i].f[m];
+			LOG(INFO)<<setw(4)<<input_features[i].f[m]<<" ";
+		}
+		LOG(INFO)<<endl;
+	}
+}
 
 

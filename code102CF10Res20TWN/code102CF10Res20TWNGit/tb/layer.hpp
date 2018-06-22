@@ -94,17 +94,16 @@ public:
 	void LoadGeneratedBias(ifstream& input);
 	void LoadGeneratedWeight(ifstream& input);
 
-//	void LoadGeneratedFeatureMap(ifstream& input);
-
-//	void UpdateMemoryForInputFeature(feature_block_t*);
-//	void UpdateMemoryForWeightAndBias(weight_block_t*);
-//	void UpdateMemoryForOutputFeature(feature_block_t*);
+	void LoadGeneratedFeatureMap(ifstream& input);
+	void UpdateMemoryForInputFeature(feature_block_t*);
+	void UpdateMemoryForWeightAndBias(weight_block_t*);
+	void UpdateMemoryForOutputFeature(feature_block_t*);
 
 //	int CheckConvolutionResults(const char* filename);
 
 protected:
 	void AllocateMemoryForWeightAndBias();
-//	void AllocateMemoryForInputFeature();
+	void AllocateMemoryForInputFeature();
 
 public:
 	config_t config;
@@ -115,8 +114,8 @@ public:
 
 private:
 	layer& operator=(const layer& l);
-//	void ReleaseMemoryForWeightAndBias();
-//	void ReleaseMemoryForInputFeature();
+	void ReleaseMemoryForWeightAndBias();
+	void ReleaseMemoryForInputFeature();
 };
 
 

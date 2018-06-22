@@ -23,10 +23,10 @@ int main(){
     network *net = new cresnet20();
     net->CreateNetwork();
     assert((STARTING_LAYER>=0) && (STARTING_LAYER<net->GetNumOfLayers()));
-//    net->LoadFeatureMap(STARTING_LAYER);
+    net->LoadFeatureMap(STARTING_LAYER);
     net->LoadWeightAndBias();
     LOG(CONSOLE)<<"finished LoadWeightAndBias"<<endl;
-//    net->StatMemoryUsage();
+    net->StatMemoryUsage();
 
     int a=4,b=5;
     int c;

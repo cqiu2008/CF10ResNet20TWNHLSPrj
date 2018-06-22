@@ -24,7 +24,7 @@ cnv_layer::cnv_layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublaye
 		):layer(name,t,nsbl,sbl,w,h,fr,wr,br,wc,ci,co,k,p,s,r,pt,psize,ppad,pstride,factor,ibufa,ibufb,ibufc,dpi,dpo,wpo,bpo){
 
 	AllocateMemoryForWeightAndBias();
-//	if(this->config.layer_name.compare("conv2") == 0){
-//		AllocateMemoryForInputFeature();
-//	}
+	if(this->config.layer_name.compare("conv2") == 0){
+		AllocateMemoryForInputFeature();
+	}
 }

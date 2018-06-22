@@ -143,14 +143,14 @@ bool network::LoadWeightAndBias(){
 }
 
 
-//bool network::LoadFeatureMap(numlayers_t first_running_layer){
-//	ifstream input;
-//	input.open(BASE_PATH"dataCF10Res20TWN/batch16Cnv1.dat");
-//	if (!input.is_open()){
-//		LOG(ERROR)<<"failed to open batch16Cnv1.dat"<<endl;
-//	}
-//	layers[first_running_layer]->LoadGeneratedFeatureMap(input);
-//	input.close();
-//
-//	return true;
-//}
+bool network::LoadFeatureMap(numlayers_t first_running_layer){
+	ifstream input;
+	input.open(BASE_PATH"dataCF10Res20TWN/batch16Cnv1.dat");
+	if (!input.is_open()){
+		LOG(ERROR)<<"failed to open batch16Cnv1.dat"<<endl;
+	}
+	layers[first_running_layer]->LoadGeneratedFeatureMap(input);
+	input.close();
+
+	return true;
+}
