@@ -39,6 +39,8 @@ add_files -tb $filePath/tb/cf10resnet20.cpp
 add_files -tb $filePath/tb/cf10resnet20.hpp
 add_files -tb $filePath/tb/cnv_layer.cpp
 add_files -tb $filePath/tb/cnv_layer.hpp
+add_files -tb $filePath/tb/driver.cpp
+add_files -tb $filePath/tb/driver.hpp
 open_solution "solution1"
 #set_part {xc7z045ffg900-2} -tool vivado
 set_part {xczu9eg-ffvb1156-2l-e-EVAL}

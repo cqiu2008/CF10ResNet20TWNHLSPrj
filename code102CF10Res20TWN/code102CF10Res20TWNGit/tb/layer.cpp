@@ -163,9 +163,7 @@ void layer::PrintLayer(){
 }
 
 void layer::AllocateMemoryForWeightAndBias(){
-	LOG(CONSOLE)<<"config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION="<<config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION<<endl;
-	//// there is a bug by cqiu ,why 2
-	int num_weights_bias = 2*config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION;
+	int num_weights_bias = config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION;
 	weights = new weight_block_t[num_weights_bias];
 	if (weights == NULL){
 		LOG(ERROR)<<"Error: failed to allocate memory(weights+bias)"<<endl;
@@ -190,22 +188,25 @@ void layer::LoadGeneratedWeight(ifstream& input){
 	}
 }
 void layer::LoadGeneratedBias(ifstream& input){
-
 	weight_block_index_t index = config.num_of_weight_blocks;
+	weight_block_index_t indexNew =0;
 	weight_t weight = 0;
 	int num = config.aligned_output_channels ;
 	LOG(CONSOLE)<<"LoadGeneratedBias Num="<<num<<endl;
 	for(int i=0;i<num;i++){
 		input>>weight;
 		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-		index += (i/NUM_OF_BYTES_PER_TRANSACTION);
-		weights[index].w[w] = weight;
+
+		indexNew = index + (i/NUM_OF_BYTES_PER_TRANSACTION);
+		weights[indexNew].w[w] = weight;
+
 		LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
 		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
 			LOG(INFO)<<endl;
 		}
 	}
 }
+
 
 
 void layer::AllocateMemoryForInputFeature(){

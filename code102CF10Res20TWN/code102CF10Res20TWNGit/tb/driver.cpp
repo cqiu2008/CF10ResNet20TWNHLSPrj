@@ -342,17 +342,31 @@ void XFPGA_Release() {
 
 
 void copyImageToSharedDRAM(network *net){
-	memcpy((void*)(SHARED_DRAM_PTR+net->GetLayer(0)->config.input_feature_offset/NUM_OF_BYTES_PER_TRANSACTION),
-			net->GetLayer(0)->input_features,sizeof(feature_t)*net->GetLayer(0)->config.size_of_input_features);
-	net->GetLayer(0)->UpdateMemoryForInputFeature((feature_block_t*)SHARED_DRAM_PTR+net->GetLayer(0)->config.input_feature_offset/NUM_OF_BYTES_PER_TRANSACTION);
+	for (numlayers_t i=0;i<net->GetNumOfLayers();i++){
+		if (i==net->GetStartingLayer()){
+			memcpy((void*)(SHARED_DRAM_PTR+net->GetLayer(i)->config.input_feature_offset/NUM_OF_BYTES_PER_TRANSACTION),net->GetLayer(i)->input_features,sizeof(feature_t)*net->GetLayer(i)->config.size_of_input_features);
+		}
+		net->GetLayer(i)->UpdateMemoryForInputFeature((feature_block_t*)(SHARED_DRAM_PTR+net->GetLayer(i)->config.input_feature_offset/NUM_OF_BYTES_PER_TRANSACTION));
+		net->GetLayer(i)->UpdateMemoryForOutputFeature((feature_block_t*)(SHARED_DRAM_PTR+net->GetLayer(i)->config.output_feature_offset/NUM_OF_BYTES_PER_TRANSACTION));
+		if ((i==(net->GetStartingLayer()+1)) && (net->GetLayer(i-1)->config.layer_type==EXPAND3x3)){
+			ifstream inf(("./outf/"+net->GetLayer(i-1)->config.layer_name).c_str());
+			if (!inf.is_open()){
+				LOG(ERROR)<<"failed to open "<<net->GetLayer(i-1)->config.layer_name<<endl;
+				return;
+			}
+			net->GetLayer(i)->LoadGeneratedFeatureMap(inf);
+			inf.close();
+		}
+	}
 }
 
 
 void copyWeightsToSharedDRAM(network *net){
 	weight_block_t* ptr = (weight_block_t*)SHARED_DRAM_PTR;
 	for (numlayers_t i=0;i<net->GetNumOfLayers();i++){
+		LOG(CONSOLE)<<"size_of_weights_and_bias="<<net->GetLayer(i)->config.size_of_weights_and_bias<<endl;
 		memcpy((void*)ptr,net->GetLayer(i)->weights,sizeof(weight_t)*net->GetLayer(i)->config.size_of_weights_and_bias);
-		net->GetLayer(i)->UpdateMemoryForWeightAndBias(ptr);
+//		net->GetLayer(i)->UpdateMemoryForWeightAndBias(ptr);
 		ptr += (net->GetLayer(i)->config.size_of_weights_and_bias/NUM_OF_BYTES_PER_TRANSACTION);
 	}
 }

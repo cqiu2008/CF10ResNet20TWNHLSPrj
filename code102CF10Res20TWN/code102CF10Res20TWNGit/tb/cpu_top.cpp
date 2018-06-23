@@ -27,13 +27,19 @@ int main(){
     net->LoadWeightAndBias();
     LOG(CONSOLE)<<"finished LoadWeightAndBias"<<endl;
     net->StatMemoryUsage();
+    XFPGA_Initialize(net);
+	LOG(CONSOLE)<<"ready to copy weight to SharedDRAM"<<endl;
+	copyWeightsToSharedDRAM(net);
+	LOG(CONSOLE)<<"ready to copy features to SharedDRAM"<<endl;
+	copyImageToSharedDRAM(net);
+
 
     int a=4,b=5;
     int c;
     Accelerator(a,b,c);
     LOG(CONSOLE)<<"c="<<c<<endl;
 
-
+    XFPGA_Release();
 
     LOG(CONSOLE)<<"Ending test the cnn inference accelerator"<<endl;
     return ret ;
