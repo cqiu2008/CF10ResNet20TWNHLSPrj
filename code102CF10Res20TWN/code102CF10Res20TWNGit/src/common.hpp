@@ -140,6 +140,8 @@ typedef ap_uint<NBITS(MAX_NUM_OF_WEIGHT_BLOCKS+MAX_NUM_OF_BIAS_BLOCKS)+1> weight
 
 typedef ap_uint<32> misc_instruction_t;
 
+typedef ap_uint<32> res_instruction_t;
+
 typedef ap_uint<32> shift_instruction_t;
 
 typedef ap_uint<32> dimension_instruction_t;
@@ -154,6 +156,7 @@ typedef ap_uint<6> sublayer_t;
 
 struct instruction_group_t{
 	misc_instruction_t imisc;
+	res_instruction_t ires;
 	shift_instruction_t ishift;
 	dimension_instruction_t idimension;
 };

@@ -138,6 +138,72 @@ layer::layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl
 
 }
 
+void layer::MakeInstructionGroup(){
+	//misc instruction format
+	//4bits: layer_type
+	//1bits: relu
+	//1bits: pad
+	//4bits: kernel_size
+	//4bits: stride
+	//2bits: pooling_type
+	//5bits: pooling_size
+	//5bits: pooling_stride
+	//1bits: pooling_pad
+	//1bits: freuse
+	//2bits: weight_compress
+	//1bits: wreuse
+	//1bits: breuse
+	insts.imisc = 0;
+	insts.imisc |= ((int(config.layer_type&0xf))<<28);
+	insts.imisc |= ((int(config.relu&1))<<27);
+	insts.imisc |= ((int((config.pad>0)&1))<<26);
+	insts.imisc |= ((int(config.kernel_size&0xf))<<22);
+	insts.imisc |= ((int(config.stride&0xf))<<18);
+	insts.imisc |= ((int(config.pooling_type&0x3))<<16);
+	insts.imisc |= ((int(config.pooling_size&0x1f))<<11);
+	insts.imisc |= ((int(config.pooling_stride&0x1f))<<6);
+	insts.imisc |= ((int(config.pooling_pad&0x1))<<5);
+	insts.imisc |= ((int(config.freuse&0x1))<<4);
+	insts.imisc |= ((int(config.wcompress&0x3))<<2);
+	insts.imisc |= ((int(config.wreuse&0x1))<<1);
+	insts.imisc |= (int(config.breuse&0x1));
+	//shift instruction format
+	//5bits: dpi
+	//5bits: dpo
+	//5bits: bpo
+	//5bits: wpo
+	//6bits: nsbl
+	//6bits: sbl
+	insts.ishift = 0;
+	insts.ishift |= ((int(config.dpi&0x1f))<<27);
+	insts.ishift |= ((int(config.dpo&0x1f))<<22);
+	insts.ishift |= ((int(config.bpo&0x1f))<<17);
+	insts.ishift |= ((int(config.wpo&0x1f))<<12);
+	insts.ishift |= ((int(config.nsbl&0x3f))<<6);
+	insts.ishift |= int(config.sbl&0x3f);
+	//dimension instruction format
+	//8bits: width,height
+	//12bits: input channel
+	//12bits: output channel
+	insts.idimension = 0;
+	insts.idimension |= ((int(config.input_width&0xff))<<24);
+	insts.idimension |= ((int(config.input_channels&0xfff))<<12);
+	insts.idimension |= (int(config.output_channels&0xfff));
+	//resnet instruction format
+	//8bits: factor
+	//2bits: ibuf_type_a
+	//2bits: ibuf_type_b
+	//2bits: ibuf_type_c
+	insts.ires = 0;
+	insts.ires |= ((int(config.ibuf_type_c))<<12);
+	insts.ires |= ((int(config.ibuf_type_b))<<10);
+	insts.ires |= ((int(config.ibuf_type_a))<<8);
+	insts.ires |= (int(config.factor & 0xff));
+}
+
+
+
+
 void layer::PrintLayer(){
 	LOG(CONSOLE)<<config.layer_name<<"\t";
 	LOG(CONSOLE)<<config.layer_type<<"\t";
