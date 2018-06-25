@@ -7,7 +7,7 @@
 #include<cassert>
 #include<cmath>
 
-#include"../src/common.hpp"
+#include"common.hpp"
 #include"logger.hpp"
 
 using namespace std;

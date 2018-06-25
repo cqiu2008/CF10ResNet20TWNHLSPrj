@@ -20,7 +20,7 @@
 #include "logger.hpp"
 #include "cf10resnet20.hpp"
 #include "../src/fpga_top.hpp"
-#include "../src/common.hpp"
+#include "common.hpp"
 #include "driver.hpp"
 
 #endif

@@ -33,7 +33,7 @@ int main(){
 	LOG(CONSOLE)<<"ready to copy features to SharedDRAM"<<endl;
 	copyImageToSharedDRAM(net);
 
-
+#if 0
 	for(numlayers_t i=0;i<net->GetNumOfLayers();i++){
 		LOG(CONSOLE)<<"computing layer "<<i<<" : "<<net->GetLayer(i)->config.layer_name<<endl;
 		LOG(CONSOLE)<<"CPU: inf="<<(unsigned long)net->GetLayer(i)->input_features;
@@ -41,18 +41,14 @@ int main(){
 		LOG(CONSOLE)<<" w="<<(unsigned long)net->GetLayer(i)->weights<<endl;
 		net->GetLayer(i)->MakeInstructionGroup();
 		gettimeofday(&start,NULL);
-		XFPGA_Run(net->GetLayer(i));
+//		XFPGA_Run(net->GetLayer(i));
 		gettimeofday(&end,NULL);
 		uint64_t elapsedus = (end.tv_usec - start.tv_usec) + ((uint64_t)(end.tv_sec-start.tv_sec))*1000000;
 		LOG(CONSOLE)<<"computation duration : "<<(1.0*elapsedus/1000)<<"ms"<<endl;
 		LOG(CONSOLE)<<"check results for layer "<<i<<" : "<<net->GetLayer(i)->config.layer_name<<endl;
 	}
-    int a=4,b=5;
-    int c;
-    Accelerator(a,b,c);
-    LOG(CONSOLE)<<"c="<<c<<endl;
-
     XFPGA_Release();
+#endif
 
     LOG(CONSOLE)<<"Ending test the cnn inference accelerator"<<endl;
     return ret ;

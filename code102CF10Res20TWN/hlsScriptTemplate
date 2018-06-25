@@ -24,7 +24,6 @@ set_top $topFunction
 set filePath ../../$codeBasePath/$codeName
 add_files $filePath/src/fpga_top.cpp
 add_files $filePath/src/fpga_top.hpp
-add_files $filePath/src/common.hpp
 add_files -tb $filePath/tb/cpu_top.cpp
 add_files -tb $filePath/tb/cpu_top.hpp
 add_files -tb $filePath/tb/network.cpp
@@ -41,6 +40,7 @@ add_files -tb $filePath/tb/cnv_layer.cpp
 add_files -tb $filePath/tb/cnv_layer.hpp
 add_files -tb $filePath/tb/driver.cpp
 add_files -tb $filePath/tb/driver.hpp
+add_files -tb $filePath/tb/common.hpp
 open_solution "solution1"
 #set_part {xc7z045ffg900-2} -tool vivado
 set_part {xczu9eg-ffvb1156-2l-e-EVAL}
