@@ -67,6 +67,7 @@ static inline void DecodeInstruction(struct instruction_group_t& insts){
 
 void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, fblock_t* outf){
 
+#if 0
 #pragma HLS TOP
 #pragma HLS INTERFACE s_axilite port=insts bundle = axilite register
 #pragma HLS INTERFACE s_axilite port = return bundle = axilite register
@@ -76,6 +77,7 @@ void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, 
 #pragma HLS INTERFACE m_axi depth=WEIGHTS_BUF_LENGTH port=w offset=slave bundle = memorybus2 register
 
 	DecodeInstruction(insts);
+#endif
 
 
 //		CopyWeightAndBiasFromDRAM(w);

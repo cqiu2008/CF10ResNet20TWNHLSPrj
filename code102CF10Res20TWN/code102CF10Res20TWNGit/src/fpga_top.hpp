@@ -76,10 +76,9 @@ struct configuration{
 	feature_block_index_t input_feature_block_index;
 	feature_block_index_t output_feature_block_index;
 	feature_t factor;
-	ibuf_enum ibuf_type_a;
-	ibuf_enum ibuf_type_b;
-	ibuf_enum ibuf_type_c;
-
+	ibuf_type_t ibuf_type_a;
+	ibuf_type_t ibuf_type_b;
+	ibuf_type_t ibuf_type_c;
 };
 
 

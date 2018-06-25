@@ -153,6 +153,8 @@ typedef ap_uint<2> weight_compress_t;
 
 typedef ap_uint<6> sublayer_t;
 
+typedef ap_uint<2> ibuf_type_t;
+
 
 struct instruction_group_t{
 	misc_instruction_t imisc;
