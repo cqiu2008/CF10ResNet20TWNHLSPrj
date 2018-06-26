@@ -12,8 +12,8 @@
 using namespace std;
 
 struct configuration config = {0};
-wblock_t bias[RAM_36K_DEPTH];
-wblock_t weights[CI_STRIDE][CO_STRIDE/NUM_OF_BYTES_PER_TRANSACTION][WEIGHT_BUF_DEPTH];
+twn_wblock_t bias[RAM_36K_DEPTH];
+twn_wblock_t weights[CI_STRIDE][WEIGHT_BUF_DEPTH];
 
 static inline void DecodeInstruction(struct instruction_group_t& insts){
 	config.dpi = (insts.ishift>>27)&0x1f;
@@ -64,7 +64,56 @@ static inline void DecodeInstruction(struct instruction_group_t& insts){
 
 
 static void CopyWeightAndBiasFromDRAM(wblock_t* w){
-
+#pragma HLS inline off
+	wblock_t w_buff[RAM_36K_DEPTH];
+	int twn_size_of_kk_co_aligned = config.aligned_output_channels * config.kernel_size * config.kernel_size / 4;
+    channel_t co_group_sum = CEIL_DIV(config.aligned_output_channels,CO_STRIDE);
+    channel_t ci_group_sum = CEIL_DIV(config.aligned_input_channels,CI_STRIDE);
+    filter_t kk_sum = config.kernel_size * config.kernel_size; 
+    int addr_offset = 0;
+    int w_buff_offset = 0;
+//====Load Weights 
+L_LOAD_CI_WEIGHTS_FROM_DRAM:
+	for(channel_t ci=0;ci<config.aligned_input_channels;ci++){
+		#pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 32 MAX = 64 
+        addr_offset = ci * twn_size_of_kk_co_aligned / NUM_OF_BYTES_PER_TRANSACTION;
+		memcpy(w_buff,&w[addr_offset],twn_size_of_kk_co_aligned);
+    L_LOAD_K_WEIGHTS_FROM_DRAM:
+        for(filter_t k=0;k<kk_sum ;k++){
+		    #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 9 
+        L_LOAD_CO_WEIGHTS_FROM_DRAM:
+            for(channel_t co_group=0;co_group<co_group_sum;co_group++){
+		        #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 9 
+                #pragma HLS PIPELINE II = 1
+                int depth = (ci*kk_sum*co_group_sum/CI_STRIDE + k*co_group_sum+co_group);
+                channel_t ci_stride = ci % CI_STRIDE;
+                twn_wblock_t twn_w[2];
+                if(co_group % 2 ==0){
+             	    ExtMemToApFixSync<TWN_DATA_WIDTH*CO_STRIDE,wblock_t,twn_wblock_t,2>(w_buff[w_buff_offset++],twn_w);
+                    weights[ci_stride][depth] = twn_w[0];
+                }else{
+                    weights[ci_stride][depth] = twn_w[1];
+                }
+            }
+        }
+	}
+//====Load Bias
+	int twn_size_of_co_aligned = config.aligned_output_channels / 4;
+    w_buff_offset = 0;
+    addr_offset = config.aligned_input_channels * config.aligned_output_channels * config.kernel_size * config.kernel_size / (4 * NUM_OF_BYTES_PER_TRANSACTION);
+    memcpy(w_buff,&w[addr_offset],twn_size_of_co_aligned);
+L_LOAD_BIAS_FROM_DRAM:
+    for(channel_t co_group=0;co_group<co_group_sum;co_group++){
+    #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 9 
+    #pragma HLS PIPELINE II = 1
+        twn_wblock_t twn_w[2];
+        if(co_group % 2 ==0){
+            ExtMemToApFixSync<TWN_DATA_WIDTH*CO_STRIDE,wblock_t,twn_wblock_t,2>(w_buff[w_buff_offset++],twn_w);
+            bias[co_group] = twn_w[0];
+        }else{
+            bias[co_group] = twn_w[1];
+        }
+    }
 }
 
 
@@ -83,7 +132,7 @@ void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, 
 
 	LOG(CONSOLE)<<"Accelerator is running"<<endl;
 
-//		CopyWeightAndBiasFromDRAM(w);
+		CopyWeightAndBiasFromDRAM(w);
 //		ComputeConvolutionResults(inf,outf);
 
 }
