@@ -15,7 +15,7 @@
 
 #include<hls_stream.h>
 #include<hls_video.h>
-#include"ap_shift_reg.h"
+//#include"ap_shift_reg.h"
 
 #include<iostream>
 #include<fstream>

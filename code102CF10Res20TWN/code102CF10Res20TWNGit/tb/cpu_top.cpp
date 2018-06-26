@@ -36,9 +36,9 @@ int main(){
 #if 1
 	for(numlayers_t i=0;i<net->GetNumOfLayers();i++){
 		LOG(CONSOLE)<<"computing layer "<<i<<" : "<<net->GetLayer(i)->config.layer_name<<endl;
-		LOG(CONSOLE)<<"CPU: inf="<<(unsigned long)net->GetLayer(i)->input_features;
-		LOG(CONSOLE)<<" outf="<<(unsigned long)net->GetLayer(i)->output_features;
-		LOG(CONSOLE)<<" w="<<(unsigned long)net->GetLayer(i)->weights<<endl;
+		//LOG(CONSOLE)<<"CPU: inf="<<(unsigned long)net->GetLayer(i)->input_features;
+		//LOG(CONSOLE)<<" outf="<<(unsigned long)net->GetLayer(i)->output_features;
+		//LOG(CONSOLE)<<" w="<<(unsigned long)net->GetLayer(i)->weights<<endl;
 		net->GetLayer(i)->MakeInstructionGroup();
 		gettimeofday(&start,NULL);
 		XFPGA_Run(net->GetLayer(i));

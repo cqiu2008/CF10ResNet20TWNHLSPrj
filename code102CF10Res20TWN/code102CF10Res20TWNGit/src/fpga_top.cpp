@@ -63,6 +63,9 @@ static inline void DecodeInstruction(struct instruction_group_t& insts){
 }
 
 
+static void CopyWeightAndBiasFromDRAM(wblock_t* w){
+
+}
 
 
 void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, fblock_t* outf){

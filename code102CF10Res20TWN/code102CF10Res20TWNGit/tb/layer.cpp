@@ -91,7 +91,7 @@ layer::layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl
 	config.aligned_input_channels = config.num_of_ci_strides*CI_STRIDE;
 
 	config.num_of_co_strides = ceil(1.0*config.output_channels/CO_STRIDE);
-	config.aligned_output_channels = ceil(1.0*config.output_channels/CI_STRIDE)*NUM_OF_BYTES_PER_TRANSACTION;
+	config.aligned_output_channels = ceil(1.0*config.output_channels/CO_STRIDE)*CO_STRIDE;
 
 	config.output_width = 1 + (config.input_width + 2*config.pad - config.kernel_size)/config.stride;
 	config.output_height = 1 + (config.input_height + 2*config.pad - config.kernel_size)/config.stride;
@@ -240,17 +240,26 @@ void layer::AllocateMemoryForWeightAndBias(){
 
 void layer::LoadGeneratedWeight(ifstream& input){
 	weight_t weight = 0;
-	int num = config.num_of_weight_blocks * NUM_OF_BYTES_PER_TRANSACTION;
+	int num = config.kernel_size*config.kernel_size*config.aligned_input_channels;
+    int twn_output_channels=config.output_channels/TWN_ONE_BYTE_DOTS;
+    int twn_aligned_output_channels=config.aligned_output_channels/TWN_ONE_BYTE_DOTS;
+
 	LOG(CONSOLE)<<"LoadGenerateWeight Num="<<num<<endl;
 	for(int i=0;i<num;i++){
-		input>>weight;
-		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-		int index = i/NUM_OF_BYTES_PER_TRANSACTION;
-		weights[index].w[w] = weight;
-		LOG(INFO)<<setw(4)<<weight<<" ";
-		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
-			LOG(INFO)<<endl;
-		}
+        for(int j=0;j<twn_aligned_output_channels;j++){
+		    weight_block_index_t w = j%NUM_OF_BYTES_PER_TRANSACTION;
+		    int index = (i*twn_aligned_output_channels+j)/NUM_OF_BYTES_PER_TRANSACTION;
+            if(j<twn_output_channels){
+		        input>>weight;
+		        weights[index].w[w] = weight;
+            }else{
+		        weights[index].w[w] = 0; 
+            }
+		    LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
+		    if(  (w+1) % (NUM_OF_BYTES_PER_TRANSACTION/2) == 0 ){
+		    	LOG(INFO)<<endl;
+		    }
+        }
 	}
 }
 void layer::LoadGeneratedBias(ifstream& input){
@@ -260,13 +269,15 @@ void layer::LoadGeneratedBias(ifstream& input){
 	int num = config.aligned_output_channels ;
 	LOG(CONSOLE)<<"LoadGeneratedBias Num="<<num<<endl;
 	for(int i=0;i<num;i++){
-		input>>weight;
 		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
-
 		indexNew = index + (i/NUM_OF_BYTES_PER_TRANSACTION);
-		weights[indexNew].w[w] = weight;
-
-		LOG(INFO)<<setw(4)<<weights[index].w[w]<<" ";
+        if(i<config.output_channels){
+		    input>>weight;
+		    weights[indexNew].w[w] = weight;
+        }else{
+		    weights[indexNew].w[w] = 0;
+        }
+		LOG(INFO)<<setw(4)<<weights[indexNew].w[w]<<" ";
 		if(w == (NUM_OF_BYTES_PER_TRANSACTION-1)){
 			LOG(INFO)<<endl;
 		}

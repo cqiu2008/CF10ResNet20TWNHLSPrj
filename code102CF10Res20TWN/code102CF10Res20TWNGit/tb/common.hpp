@@ -8,6 +8,7 @@
 
 #define TWN_ONE_BYTE_DOTS                   4
 
+
 #define BATCH_NUM                           16
 
 #define SQUEEZENET							1
@@ -43,6 +44,8 @@
 #define CO_STRIDE_MASK						5
 
 #define DATA_WIDTH							8
+
+#define TWN_DATA_WIDTH                      2
 
 #define RAM_36K_DEPTH						512
 
@@ -115,6 +118,9 @@ typedef ap_uint<4*DATA_WIDTH*CO_STRIDE> accumulators_t;
 typedef ap_int<2*DATA_WIDTH+NBITS(CI_STRIDE)-1> partial_sum_t;
 typedef ap_uint<DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION> fblock_t;
 typedef ap_uint<DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION> wblock_t;
+
+typedef ap_uint<TWN_DATA_WIDTH*CO_STRIDE> twn_wblock_t;
+
 typedef ap_uint<4*DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION> ppblock16_t;
 typedef ap_uint<4*DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION/4> ppblock4_t;
 typedef ap_uint<COUNTER_WIDTH*NUM_OF_BYTES_PER_TRANSACTION> counter_block_t;
