@@ -22,7 +22,7 @@
 #include<cstring>
 #include<cassert>
 
-//#include "logger.hpp"
+#include "logger.hpp"
 #include "common.hpp"
 
 

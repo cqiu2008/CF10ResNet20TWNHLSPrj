@@ -17,10 +17,10 @@
 #include<cassert>
 #include<math.h>
 #include<sys/time.h>
-#include "logger.hpp"
 #include "cf10resnet20.hpp"
 #include "../src/fpga_top.hpp"
 #include "common.hpp"
+#include "logger.hpp"
 #include "driver.hpp"
 
 #endif

@@ -319,7 +319,7 @@ volatile feature_block_t* SHARED_DRAM_PTR = NULL;
 
 
 void XFPGA_Run(layer* layer) {
-//	Accelerator(layer->insts,(wblock_t*)layer->weights,(fblock_t*)layer->input_features,(fblock_t*)layer->output_features);
+	Accelerator(layer->insts,(wblock_t*)layer->weights,(fblock_t*)layer->input_features,(fblock_t*)layer->output_features);
 }
 
 
