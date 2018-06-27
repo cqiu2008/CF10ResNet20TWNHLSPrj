@@ -9,8 +9,12 @@
 //
 //----------------------------------------------------------------
 #include "fpga_top.hpp"
+
+
+
 using namespace std;
 
+#if 1
 struct configuration config = {0};
 twn_wblock_t bias[RAM_36K_DEPTH];
 twn_wblock_t weights[CI_STRIDE][WEIGHT_BUF_DEPTH];
@@ -94,6 +98,13 @@ L_LOAD_CI_WEIGHTS_FROM_DRAM:
                 }else{
                     weights[ci_stride][depth] = twn_w[1];
                 }
+#ifndef __SYNTHESIS__
+                weight_t w_array[8];
+                ExtMemToApFixSync<DATA_WIDTH,twn_wblock_t,weight_t,8>(weights[ci_stride][depth],w_array);
+                for(int i=0;i<8;i++){
+                	LOG(INFO)<<"facc::weights="<<setbase(10)<<setw(4)<<w_array[i]<<endl;
+                }
+#endif
             }
         }
 	}
@@ -129,10 +140,11 @@ void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, 
 #pragma HLS INTERFACE m_axi depth=WEIGHTS_BUF_LENGTH port=w offset=slave bundle = memorybus2 register
 
 	DecodeInstruction(insts);
-
+#ifndef __SYNTHESIS__
 	LOG(CONSOLE)<<"Accelerator is running"<<endl;
-
+#endif
 		CopyWeightAndBiasFromDRAM(w);
 //		ComputeConvolutionResults(inf,outf);
 
 }
+#endif

@@ -267,7 +267,7 @@ void layer::LoadGeneratedBias(ifstream& input){
 	weight_block_index_t indexNew =0;
 	weight_t weight = 0;
 	int num = config.aligned_output_channels ;
-	LOG(CONSOLE)<<"LoadGeneratedBias Num="<<num<<endl;
+	LOGNO(CONSOLE)<<"LoadGeneratedBias Num="<<num<<endl;
 	for(int i=0;i<num;i++){
 		weight_block_index_t w = i%NUM_OF_BYTES_PER_TRANSACTION;
 		indexNew = index + (i/NUM_OF_BYTES_PER_TRANSACTION);

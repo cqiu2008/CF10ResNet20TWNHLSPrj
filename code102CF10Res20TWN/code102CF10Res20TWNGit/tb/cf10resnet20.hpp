@@ -1,9 +1,10 @@
 #ifndef __CRESNET20__HPP__
 #define __CRESNET20__HPP__
-#include "common.hpp"
-#include "logger.hpp"
+
 #include "network.hpp"
 #include "cnv_layer.hpp"
+#include "../src/common.hpp"
+#include "../src/logger.hpp"
 class cresnet20:public network{
 public:
 	cresnet20();

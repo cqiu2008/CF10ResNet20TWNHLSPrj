@@ -18,9 +18,9 @@
 #include<math.h>
 #include<sys/time.h>
 #include "cf10resnet20.hpp"
-#include "../src/fpga_top.hpp"
-#include "common.hpp"
-#include "logger.hpp"
 #include "driver.hpp"
+#include "../src/fpga_top.hpp"
+#include "../src/common.hpp"
+#include "../src/logger.hpp"
 
 #endif

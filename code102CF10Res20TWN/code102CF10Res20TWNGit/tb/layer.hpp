@@ -7,8 +7,8 @@
 #include<cassert>
 #include<cmath>
 
-#include"common.hpp"
-#include"logger.hpp"
+#include"../src/common.hpp"
+#include"../src/logger.hpp"
 
 using namespace std;
 

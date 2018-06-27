@@ -48,6 +48,6 @@ private:
 
 
 #define LOG(log_level)  Logger::getInstance()->start(log_level,__FILE__,__LINE__,__FUNCTION__)
-#define LOGNO(log_level) myout
+#define LOGNO(log_level) myos
 
 #endif

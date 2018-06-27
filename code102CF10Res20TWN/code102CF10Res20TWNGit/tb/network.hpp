@@ -2,9 +2,9 @@
 #define NETWORK_HPP__
 
 #include<iostream>
-#include"logger.hpp"
 #include"layer.hpp"
 #include"cnv_layer.hpp"
+#include"../src/logger.hpp"
 
 using namespace std;
 

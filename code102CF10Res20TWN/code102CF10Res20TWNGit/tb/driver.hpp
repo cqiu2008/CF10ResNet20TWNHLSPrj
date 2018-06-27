@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include"common.hpp"
+#include"../src/common.hpp"
 
 #if RUN_FOR_SIMULATION!=1
 #include <sys/mman.h>

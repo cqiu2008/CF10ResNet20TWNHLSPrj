@@ -13,18 +13,19 @@
 
 #define AP_INT_MAX_W                        4096
 
+#if 1
+
+//#include"ap_shift_reg.h"
 #include<hls_stream.h>
 #include<hls_video.h>
-//#include"ap_shift_reg.h"
-
 #include<iostream>
+#include <iomanip>
 #include<fstream>
 #include<cstring>
 #include<cassert>
 
-#include "logger.hpp"
 #include "common.hpp"
-
+#include "logger.hpp"
 
 const long int WEIGHTS_BUF_LENGTH = 1000;
 const long int INPUT_FEATURE_BUF_LENGTH = 1000;
@@ -107,5 +108,6 @@ void ApFixToExtMemSync(T_SRC &src, T_DST dst[W]){
 void Accelerator(struct instruction_group_t& insts,wblock_t* w,fblock_t* inf,fblock_t* outf);
 
 
+#endif
 #endif
 
