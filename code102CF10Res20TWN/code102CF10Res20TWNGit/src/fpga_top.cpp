@@ -17,7 +17,10 @@ using namespace std;
 #if 1
 struct configuration config = {0};
 twn_wblock_t bias[RAM_36K_DEPTH];
-twn_wblock_t weights[CI_STRIDE][WEIGHT_BUF_DEPTH];
+twn_wblock_t weights[CI_STRIDE][WEIGHT_BUF_DEPTH];//2*16=32
+fblock_t ibufa[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
+fblock_t ibufb[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
+fblock_t ibufc[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
 
 static inline void DecodeInstruction(struct instruction_group_t& insts){
 	config.dpi = (insts.ishift>>27)&0x1f;
@@ -64,8 +67,39 @@ static inline void DecodeInstruction(struct instruction_group_t& insts){
 	config.ibuf_type_a = (insts.ires >> 8) & 0x3;
 	config.ibuf_type_b = (insts.ires >> 10) & 0x3;
 	config.ibuf_type_b = (insts.ires >> 12) & 0x3;
+    config.is_first_layer = (insts.ires >> 14) & 0x1;
 }
 
+static void CopyImageFromDRAM(fblock_t* inf){
+#pragma HLS inline off
+#pragma HLS ARRAY_PARTITION  variable = ibufa complete dim = 2
+#pragma HLS ARRAY_PARTITION  variable = ibufb complete dim = 2
+#pragma HLS ARRAY_PARTITION  variable = ibufc complete dim = 2
+
+#pragma HLS RESOURCE variable = ibufa core = RAM_S2P_BRAM latency = 3
+#pragma HLS RESOURCE variable = ibufb core = RAM_S2P_BRAM latency = 3
+#pragma HLS RESOURCE variable = ibufc core = RAM_S2P_BRAM latency = 3
+    int img_len = config.input_width * config.input_height;
+    channel_t ci_group_sum =  config.input_channels/CI_STRIDE; 
+    int size_of_itrans = sizeof(fblock_t)*CI_STRIDE;
+    int addr_offset = 0;
+    int ibuf_offset = 0;
+    for(int i=0;i<img_len;i++){
+    #pragma HLS LOOP_TRIPCOUNT MIN = 1024 AVG = 1024 MAX = 1024 
+        for(channel_t ci_group=0;ci_group<ci_group_sum;ci_group++){
+        #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 1
+            ibuf_offset = i*ci_group_sum+ci_group;
+            addr_offset = ibuf_offset*CI_STRIDE; 
+            if(config.ibuf_type_a == M){
+                memcpy(ibufa[ibuf_offset],&inf[addr_offset],size_of_itrans);
+            }else if(config.ibuf_type_b == M){
+                memcpy(ibufb[ibuf_offset],&inf[addr_offset],size_of_itrans);
+            }else if(config.ibuf_type_c == M){
+                memcpy(ibufc[ibuf_offset],&inf[addr_offset],size_of_itrans);
+            }
+        }
+    }
+}
 
 static void CopyWeightAndBiasFromDRAM(wblock_t* w){
 #pragma HLS inline off
@@ -139,11 +173,14 @@ void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, 
 #pragma HLS INTERFACE m_axi depth=INPUT_FEATURE_BUF_LENGTH port=inf offset=slave bundle = memorybus1 register
 #pragma HLS INTERFACE m_axi depth=WEIGHTS_BUF_LENGTH port=w offset=slave bundle = memorybus2 register
 
-	DecodeInstruction(insts);
 #ifndef __SYNTHESIS__
 	LOG(CONSOLE)<<"Accelerator is running"<<endl;
 #endif
-		CopyWeightAndBiasFromDRAM(w);
+	DecodeInstruction(insts);
+    CopyWeightAndBiasFromDRAM(w);
+    if(config.is_first_layer){
+        CopyImageFromDRAM(inf);
+    }
 //		ComputeConvolutionResults(inf,outf);
 
 }

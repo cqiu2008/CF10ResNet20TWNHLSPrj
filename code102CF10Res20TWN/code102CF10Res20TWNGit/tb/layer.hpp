@@ -83,7 +83,7 @@ public:
 			shift_t& dpi,shift_t& dpo, shift_t& wpo, shift_t& bpo);
 
 	void PrintLayer();
-	void MakeInstructionGroup();
+    void MakeInstructionGroup(bool is_first_layer);
 
 	virtual void CompressWeights(){}
 

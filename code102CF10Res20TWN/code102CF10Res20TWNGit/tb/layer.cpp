@@ -138,7 +138,7 @@ layer::layer(std::string& name, layer_enum& t, sublayer_t& nsbl, sublayer_t& sbl
 
 }
 
-void layer::MakeInstructionGroup(){
+void layer::MakeInstructionGroup(bool is_first_layer){
 	//misc instruction format
 	//4bits: layer_type
 	//1bits: relu
@@ -195,6 +195,7 @@ void layer::MakeInstructionGroup(){
 	//2bits: ibuf_type_b
 	//2bits: ibuf_type_c
 	insts.ires = 0;
+    insts.ires |= (int(is_first_layer))<<14;
 	insts.ires |= ((int(config.ibuf_type_c))<<12);
 	insts.ires |= ((int(config.ibuf_type_b))<<10);
 	insts.ires |= ((int(config.ibuf_type_a))<<8);

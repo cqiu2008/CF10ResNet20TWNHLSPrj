@@ -11,6 +11,8 @@
 
 #define BATCH_NUM                           16
 
+#define IBUF_DEPTH                          1024
+
 #define SQUEEZENET							1
 
 #define LOAD_BALANCE						1
