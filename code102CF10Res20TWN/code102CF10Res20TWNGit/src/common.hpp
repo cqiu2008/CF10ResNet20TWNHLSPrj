@@ -3,6 +3,8 @@
 
 #include<string>
 #include<ap_int.h>
+#include<hls_stream.h>
+#include<hls_video.h>
 
 #define BASE_PATH                           "../../../../../../" //--csim/build
 
@@ -10,6 +12,7 @@
 
 
 #define BATCH_NUM                           16
+
 
 #define IBUF_DEPTH                          1024
 
@@ -91,6 +94,11 @@
 
 #define MAX_NUM_OF_WEIGHT_BLOCKS			(MAX_NUM_OF_CHANNEL_DIV*MAX_KERNEL_SIZE*MAX_KERNEL_SIZE*MAX_CHANNEL_NUM)
 
+
+#define FBLOCK_WIDTH                        (DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION)
+
+#define PX_STRM_WIDTH                       (CI_STRIDE*BATCH_NUM*DATA_WIDTH)
+
 //macro declare
 #define CEIL_DIV(x,y)						(((x)+(y)-1)/(y))
 #define MAX(x,y)							(((x)<(y)) ? (y) : (x))
@@ -155,6 +163,7 @@ typedef ap_uint<32> shift_instruction_t;
 typedef ap_uint<32> dimension_instruction_t;
 
 typedef ap_uint<4> layer_type_t;
+typedef ap_uint<3> ibuf_comb_t;
 typedef ap_uint<2> pooling_type_t;
 
 typedef ap_uint<2> weight_compress_t;
@@ -162,6 +171,10 @@ typedef ap_uint<2> weight_compress_t;
 typedef ap_uint<6> sublayer_t;
 
 typedef ap_uint<2> ibuf_type_t;
+
+typedef ap_uint<PX_STRM_WIDTH> px_strm_t;
+
+typedef hls::stream<px_strm_t> hls_px_strm_t;
 
 
 struct instruction_group_t{
@@ -199,6 +212,15 @@ enum ibuf_enum{
 	ADD,
 	M,
 	OUT
+};
+
+enum ibuf_comb_enum{
+    M_OUT_NADD = 0,
+    M_ADD_OUT,
+    OUT_NADD_M,
+    OUT_M_ADD,
+    NADD_OUT_M,
+    ADD_M_OUT
 };
 
 

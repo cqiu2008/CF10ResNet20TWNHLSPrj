@@ -22,6 +22,10 @@ fblock_t ibufa[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
 fblock_t ibufb[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
 fblock_t ibufc[IBUF_DEPTH][CI_STRIDE];//4*2*16=128
 
+
+
+
+
 static inline void DecodeInstruction(struct instruction_group_t& insts){
 	config.dpi = (insts.ishift>>27)&0x1f;
 	config.dpo = (insts.ishift>>22)&0x1f;
@@ -68,6 +72,85 @@ static inline void DecodeInstruction(struct instruction_group_t& insts){
 	config.ibuf_type_b = (insts.ires >> 10) & 0x3;
 	config.ibuf_type_b = (insts.ires >> 12) & 0x3;
     config.is_first_layer = (insts.ires >> 14) & 0x1;
+    //ibufa,  ibufb,  ibufc,
+    // M   ,   OUT ,   NADD,
+    // M   ,   ADD ,   OUT ,
+    // OUT ,   NADD,   M   ,
+    // OUT ,   M   ,   ADD ,
+    // NADD,   OUT ,   M   ,
+    //  ADD,   M   ,   OUT ,
+    if((config.ibuf_type_a == M) && (config.ibuf_type_b == OUT) && (config.ibuf_type_a == NADD)){
+        config.ibuf_comb=M_OUT_NADD;
+    }else if((config.ibuf_type_a == M) && (config.ibuf_type_b == ADD) && (config.ibuf_type_a == OUT)){
+        config.ibuf_comb=M_ADD_OUT;
+    }else if((config.ibuf_type_a == OUT) && (config.ibuf_type_b == NADD) && (config.ibuf_type_a == M)){
+        config.ibuf_comb=OUT_NADD_M;
+    }else if((config.ibuf_type_a == OUT) && (config.ibuf_type_b == M) && (config.ibuf_type_a == ADD)){
+        config.ibuf_comb=OUT_M_ADD;
+    }else if((config.ibuf_type_a == NADD) && (config.ibuf_type_b == OUT) && (config.ibuf_type_a == M)){
+        config.ibuf_comb=NADD_OUT_M;
+    }else if((config.ibuf_type_a == ADD) && (config.ibuf_type_b == M) && (config.ibuf_type_a == OUT)){
+        config.ibuf_comb=ADD_M_OUT;
+    }else{
+        config.ibuf_comb=M_OUT_NADD;
+    }
+}
+
+static void LoadFeatureFromBuf(fblock_t ibuf[IBUF_DEPTH][CI_STRIDE]){
+#pragma HLS INLINE OFF
+    dimension_t width=config.input_width; 
+    dimension_t height=config.input_height; 
+    dimension_t w_sum=config.output_width-1;
+    dimension_t h_sum=config.output_height-1;
+    filter_t kh_sum = config.kernel_size;
+    filter_t kw_sum = config.kernel_size;
+    dimension_t stride = config.stride;
+    channel_t ci_group_sum = CEIL_DIV(config.aligned_input_channels,CI_STRIDE);
+    px_strm_t px_strm_value;
+    int h_first=0;
+    int w_first=0;
+    int h_addr=0;
+    int w_addr=0;
+    bool jump=0;
+    int depth=0;
+    fblock_t px_value[CI_STRIDE];
+L_LOAD_IMG_FROM_RAM_H:
+    for(dimension_t h=0;h<h_sum;h++){
+    #pragma HLS LOOP_TRIPCOUNT MIN = 8 AVG = 16 MAX = 32 
+        for(dimension_t w=0;w<w_sum;w++){
+        #pragma HLS LOOP_TRIPCOUNT MIN = 8 AVG = 16 MAX = 32 
+            for(filter_t kh=0;kh<kh_sum;kh++){
+            #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 3 
+                for(filter_t kw=0;kw<kw_sum;kw++){
+                #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 1 MAX = 3 
+                    for(channel_t ci_group=0;ci_group<ci_group_sum;ci_group++){
+                    #pragma HLS LOOP_TRIPCOUNT MIN = 1 AVG = 2 MAX = 4 
+                    #pragma PIPELINE II=1
+                        h_first=h*stride-config.pad;
+                        w_first=w*stride-config.pad;
+                        h_addr=h_first+kh;
+                        w_addr=w_first+kw;
+                        jump=(h_addr <0) || (h_addr >=height) ||
+                              (w_addr <0) || (w_addr >=width) ;
+                        depth = (h_addr*width+w_addr)*ci_group_sum+ci_group;
+                        for(channel_t ci_stride=0;ci_stride<CI_STRIDE;ci_stride++){
+                        #pragma HLS UNROLL
+                        	px_value[ci_stride]= jump ? fblock_t(0) : ibuf[depth][ci_stride];
+//                            if(config.ibuf_type_a == M){
+//                               px_value[ci_stride]= jump ? fblock_t(0) : ibufa[depth][ci_stride];
+//                            }else if(config.ibuf_type_b == M){
+//                               px_value[ci_stride]= jump ? fblock_t(0) : ibufb[depth][ci_stride];
+//                            }else if(config.ibuf_type_c == M){
+//                               px_value[ci_stride]= jump ? fblock_t(0) : ibufc[depth][ci_stride];
+//                            }
+                        }
+                        ApFixToExtMemSync<FBLOCK_WIDTH,px_strm_t,fblock_t,CI_STRIDE>(px_strm_value,px_value);
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 static void CopyImageFromDRAM(fblock_t* inf){
@@ -162,6 +245,13 @@ L_LOAD_BIAS_FROM_DRAM:
 }
 
 
+//static void ComputeConvolutionResults(){
+////#pragma HLS INLINE OFF
+////#pragma HLS DATAFLOW
+//    LoadFeatureFromBuf();
+//}
+//#pragma HLS inline off
+
 void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, fblock_t* outf){
 
 
@@ -180,6 +270,9 @@ void Accelerator(struct instruction_group_t& insts, wblock_t* w, fblock_t* inf, 
     CopyWeightAndBiasFromDRAM(w);
     if(config.is_first_layer){
         CopyImageFromDRAM(inf);
+    }
+    if(config.ibuf_comb == M_OUT_NADD){
+        LoadFeatureFromBuf(ibufa);
     }
 //		ComputeConvolutionResults(inf,outf);
 

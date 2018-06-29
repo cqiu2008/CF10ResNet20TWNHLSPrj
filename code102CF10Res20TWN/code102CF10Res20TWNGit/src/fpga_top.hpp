@@ -80,6 +80,7 @@ struct configuration{
 	ibuf_type_t ibuf_type_a;
 	ibuf_type_t ibuf_type_b;
 	ibuf_type_t ibuf_type_c;
+    ibuf_comb_t ibuf_comb;
     bool is_first_layer;
 };
 
