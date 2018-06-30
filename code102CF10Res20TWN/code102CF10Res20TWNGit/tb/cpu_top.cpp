@@ -13,6 +13,8 @@
 
 int main(){
     int ret = 0;
+    assert(CI_STRIDE == NUM_OF_BYTES_PER_TRANSACTION);
+    assert(CI_STRIDE == BATCH_NUM);
 	assert((MAX_CHANNEL_NUM%CO_STRIDE)==0);
 	assert((MAX_KERNEL_SIZE & (MAX_KERNEL_SIZE-1))==0);
 	assert((CO_STRIDE%NUM_OF_BYTES_PER_TRANSACTION)==0);

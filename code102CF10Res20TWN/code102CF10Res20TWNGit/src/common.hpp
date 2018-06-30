@@ -13,6 +13,7 @@
 
 #define BATCH_NUM                           16
 
+#define ACC_DATA_WIDTH                      24
 
 #define IBUF_DEPTH                          1024
 
@@ -97,7 +98,10 @@
 
 #define FBLOCK_WIDTH                        (DATA_WIDTH*NUM_OF_BYTES_PER_TRANSACTION)
 
-#define PX_STRM_WIDTH                       (CI_STRIDE*BATCH_NUM*DATA_WIDTH)
+#define PXI_STRM_WIDTH                       (CI_STRIDE*BATCH_NUM*DATA_WIDTH)
+
+#define PXO_STRM_WIDTH                       (CO_STRIDE*BATCH_NUM*ACC_DATA_WIDTH)
+
 
 //macro declare
 #define CEIL_DIV(x,y)						(((x)+(y)-1)/(y))
@@ -121,7 +125,9 @@ typedef ap_int<DATA_WIDTH> feature_t;
 typedef ap_int<27> combined_weights_t;
 typedef ap_int<35> combined_product_t;
 typedef ap_int<2*DATA_WIDTH> product_t;
-typedef ap_int<4*DATA_WIDTH> accumulator_t;
+
+typedef ap_int<ACC_DATA_WIDTH> accumulator_t;
+
 typedef ap_uint<COUNTER_WIDTH> counter_t;
 typedef ap_uint<4*DATA_WIDTH*CO_STRIDE> accumulators_t;
 
@@ -172,9 +178,12 @@ typedef ap_uint<6> sublayer_t;
 
 typedef ap_uint<2> ibuf_type_t;
 
-typedef ap_uint<PX_STRM_WIDTH> px_strm_t;
+typedef ap_uint<PXI_STRM_WIDTH> pxi_strm_t;
+typedef ap_uint<PXO_STRM_WIDTH> pxo_strm_t;
+typedef ap_uint<TWN_DATA_WIDTH> twn_weight_t;
 
-typedef hls::stream<px_strm_t> hls_px_strm_t;
+typedef hls::stream<pxi_strm_t> hls_pxi_strm_t;
+typedef hls::stream<pxo_strm_t> hls_pxo_strm_t;
 
 
 struct instruction_group_t{
